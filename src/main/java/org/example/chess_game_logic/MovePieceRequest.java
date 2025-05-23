@@ -2,16 +2,25 @@ package org.example.chess_game_logic;
 
 import lombok.Getter;
 
+/**
+ * Request object for moving a chess piece
+ */
 @Getter
 public class MovePieceRequest {
-    private final Long idPlayer;
-    private final int xCurrent, yCurrent,xDestination,yDestination;
-    MovePieceRequest(Long idPlayer,int x1,int y1,int x2,int y2){
-        this.idPlayer=idPlayer;
-        this.xCurrent=x1;
-        this.yCurrent =y1;
-        this.xDestination=x2;
-        this.yDestination=y2;
+    private Long idPlayer;
+    private final int xCurrent;
+    private  final int yCurrent;
+    private final int xDestination;
+    private final int yDestination;
+
+
+    public MovePieceRequest(Long idPlayer, int xCurrent, int yCurrent, int xDestination, int yDestination) {
+        this.idPlayer = idPlayer;
+        this.xCurrent = xCurrent;
+        this.yCurrent = yCurrent;
+        this.xDestination = xDestination;
+        this.yDestination = yDestination;
     }
+
 
 }
