@@ -2,54 +2,91 @@ package org.example.chess_game_logic.chess_pieces;
 
 import org.example.chess_game_logic.MovePieceException;
 import org.example.chess_game_logic.MovePieceRequest;
-import org.example.chess_game_logic.MovePieceException;
-import java.util.Arrays;
-import java.util.List;
+import org.example.entities.PromInfoNeededException;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
+@Component
+@Scope("prototype")
 public class MoveValidator {
-    private ChessPieceInterface[] board = new ChessPieceInterface[64];
-    public MoveValidator(){
-     this.initializeBoard();
-    }
-   private  void initializeBoard(){
-        this.board[3]=new Queen(9,Color.White, Arrays.asList(ChessMoveType.Diagonal,ChessMoveType.Horizontal,ChessMoveType.Vertical));
 
+    private final Board board;
 
-   }
-    public void processMoveRequest(MovePieceRequest request,ChessMoveType moveType){
-       int pieceIndex=this.getIndex(request.getXCurrent() ,request.getYCurrent());
-       ChessPieceInterface selectedPiece=board[pieceIndex];
-       if(selectedPiece==null)
-           throw new MovePieceException("No piece selected");
-       if(!selectedPiece.getMoveTypes().contains(moveType))
-           throw new MovePieceException("Incorrect Move");
-       ///King check
-      ///Pawn check
-      ///knight check (easier because i don't have to check if there are any pieces in the way top the destination)
+  MoveValidator(Board board){
+    this.board=board;
+  }
+  public void processMoveRequest(MovePieceRequest request, ChessMoveType moveType,Color playerColor){
+      Position curPosition=request.mapCurPosition();
+      Position destPosition=request.mapDestPosition();
+      PieceInterface piece=board.getPieceAt(curPosition);
 
-      if(this.isMoveValid(request,moveType,selectedPiece.getColor())){
+      if(piece==null)
+        throw new MovePieceException("No piece selected!");
+      System.out.println(piece+" "+ playerColor+ " selected");
+      if(piece.getColor()!=playerColor)
+          throw new MovePieceException("This piece isn't yours!");
+      if(!(piece instanceof King) ) {
+          if (!piece.canMove(curPosition, destPosition, moveType, board)) {
+              throw new MovePieceException("Move can not be executed!");
+          }
+      }
+      else{
+
+          if(!piece.canMove(curPosition, destPosition, moveType, board)){
+              Position rookCastlePoz=((King)piece).getPositionCastle(curPosition, destPosition, moveType, board);
+              if(rookCastlePoz==null)
+                  throw new MovePieceException("Castle can't be executed!");
+              if(!isCastleSafe(curPosition,rookCastlePoz,playerColor))
+                  throw new MovePieceException("Castle not done!King in check!!");
+              board.makeCastle(curPosition,rookCastlePoz);
+              System.out.println("Board config:");
+              board.printBoard();
+              return;
+          }
 
       }
-   }
-   boolean isMoveValid(MovePieceRequest request,ChessMoveType moveType,Color color){
-        int currentIdx=this.getIndex(request.getXCurrent(), request.getYCurrent());
-        int destintaionIdx=this.getIndex(request.getXDestination(), request.getYDestination());
-       if(board[destintaionIdx]!=null && board[destintaionIdx].getColor()==color)
-           throw new MovePieceException("You already have a piece on ("+ request.getXDestination()+" , "+request.getYDestination()+")" );
-       int offset=moveType.getOffset(request);
 
-      currentIdx+=offset;
-      while(currentIdx!=destintaionIdx && board[currentIdx]==null){
-          currentIdx+=offset;
+      Position p=board.getKingPozMap().get(playerColor);
+      PieceInterface selectedKing= board.getPieceAt(p);
+
+      if(!(selectedKing instanceof King))
+          throw new MovePieceException("King check not done");
+      if(!this.isKingSafe(curPosition,destPosition,board,playerColor))
+          throw new MovePieceException("King "+playerColor+" is in check!" );
+      board.movePiece(curPosition,destPosition);
+      System.out.println();
+      System.out.println("Board config:");
+      board.printBoard();
+
+      if(piece instanceof Pawn){
+          if(((Pawn)piece).canPromote(destPosition))
+              throw new PromInfoNeededException("Alege cu ce piesa vrei sa promovezi!");
       }
-      if(currentIdx!=destintaionIdx)
-          throw new MovePieceException("Pieces in the way square "+destintaionIdx);
-      return true;
-   }
-
-    int getIndex(int row, int col) {
-        return row * 8 + col;
     }
+    private boolean isKingSafe(Position curPosition, Position destPosition, Board board, Color playerColor) {
+        board.movePiece(curPosition, destPosition);
+        try {
+            PieceInterface king = board.getPieceAt(board.getKingPozMap().get(playerColor));
+            System.out.println("Selected piece as king :"+king);
+            return !(king instanceof King) || !((King) king).isInCheck(board);
+        } finally {
+            board.movePiece(destPosition, curPosition);  // undo move
+        }
+    }
+
+    private boolean isCastleSafe(Position kingPoz,Position rookPoz,Color playerColor){
+        board.makeCastle(kingPoz, rookPoz);
+        try {
+            PieceInterface king = board.getPieceAt(board.getKingPozMap().get(playerColor));
+            System.out.println("Selected piece as king :"+king);
+            return !(king instanceof King) || !((King) king).isInCheck(board);
+        } finally {
+            board.undoCastle(kingPoz,rookPoz);  // undo move
+        }
+
+    }
+
+
 
 
 

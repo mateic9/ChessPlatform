@@ -5,34 +5,29 @@ import lombok.Getter;
 import java.util.Arrays;
 import java.util.List;
 @Getter
+public class Bishop implements PieceInterface{
 
-public class Queen implements PieceInterface {
-    private final int value = 9;
+    private final int value = 3;
     private final Color color;
     private final List<ChessMoveType> moveTypes = Arrays.asList(
-            ChessMoveType.Diagonal,
-            ChessMoveType.Horizontal,
-            ChessMoveType.Vertical
+            ChessMoveType.Diagonal
+
     );
 
-    Queen(Color color) {
+    Bishop(Color color) {
         this.color = color;
     }
 
     @Override
     public String toString() {
-        return "Queen " + color;
+        return "Bishop " + color;
     }
 
     public boolean canMove(Position curPosition, Position destPosition, ChessMoveType moveType, Board board) {
-        System.out.println("Tryong to perform move "+moveType+" on piece "+this);
+        System.out.println("Trying to perform move "+moveType+" on piece "+this);
         if (!moveTypes.contains(moveType)) return false;
 
-        if (moveType == ChessMoveType.Vertical)
-            return canMoveLinear(curPosition, destPosition, moveType, board);
-        else if (moveType == ChessMoveType.Horizontal)
-            return canMoveLinear(curPosition, destPosition, moveType, board);
-        else if (moveType == ChessMoveType.Diagonal)
+       if (moveType == ChessMoveType.Diagonal)
             return canMoveLinear(curPosition, destPosition, moveType, board);
 
         return false;
@@ -69,12 +64,12 @@ public class Queen implements PieceInterface {
     public boolean canCapture(Position curPosition, Position destPosition, ChessMoveType moveType, Board board){
         if(!moveTypes.contains(moveType))
             return false;
-      return canMoveLinear(curPosition,destPosition,moveType,board);
+        return canMoveLinear(curPosition,destPosition,moveType,board);
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "q";
+            return "b";
         else
-            return "Q";
+            return "B";
     }
 }

@@ -3,6 +3,7 @@ package org.example.chess_game_logic;
 
 
 
+import org.example.entities.PromInfoNeededException;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
 
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
-import java.util.concurrent.BrokenBarrierException;
 
 @RestController
 @RequestMapping("/game")
@@ -35,7 +35,7 @@ public class GameController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("User not found with ID: " + request.getIdPlayer());
         }
-        ChessGame game=gameManager.processJoinRequest(request);
+        Lobby game=gameManager.processJoinRequest(request);
         if(game!=null)
          return ResponseEntity.ok("Player joined with id: " + request.getIdPlayer()+" joined the game "+game.getIdGame());
         else
@@ -51,9 +51,28 @@ public class GameController {
            gameManager.processMove(request);
            return ResponseEntity.ok("Move received");
        }
+       catch (MovePieceException e){
+           return ResponseEntity.badRequest().body(e.getMessage());
+       }
+       catch(PromInfoNeededException e){
+           return ResponseEntity.status(202).body(e.getMessage());
+       }
        catch(Exception e) {
            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                    .body(e.getMessage());
        }
+    }
+
+    @PostMapping("/promote-piece")
+    public ResponseEntity<String> movePiece(@RequestBody PromotePieceRequest request) {
+        try {
+
+            gameManager.findGame(request.getIdPlayer()).processPromoteRequest(request);
+            return ResponseEntity.ok("Promotion done!");
+        }
+        catch (MovePieceException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(e.getMessage());
+        }
     }
 }

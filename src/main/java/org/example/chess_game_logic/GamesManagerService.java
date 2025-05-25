@@ -2,83 +2,94 @@ package org.example.chess_game_logic;
 import org.example.chess_game_logic.chess_pieces.MoveValidator;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-import java.util.concurrent.BrokenBarrierException;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.locks.ReentrantLock;
-
 
 @Service
 public class GamesManagerService {
-    //    private final Queue<Long> waitingPlayers = new ConcurrentLinkedQueue<>();
-    CyclicBarrier barrier1 = new CyclicBarrier(2, () -> {
-        System.out.println("Barrier 1 reached!");
+
+    private final MoveValidator moveValidator;
+    private final Map<Long, Lobby> activeGames = new ConcurrentHashMap<>();
+    private final ReentrantLock smallLock = new ReentrantLock();
+    private final CyclicBarrier barrier = new CyclicBarrier(2, () -> {
+        System.out.println("Barrier reached!");
     });
+
     private volatile boolean isGameCreated;
-    private final Map<Long, ChessGame> activeGames = new ConcurrentHashMap<>();
-    volatile Long idFirstPlayer= (long) -1;
-    volatile Long idSecondPlayer= (long) -1;
-    private static ReentrantLock smallLock= new ReentrantLock();
-    private volatile ChessGame gameToBeCreated=null;
+    private volatile Long idFirstPlayer = -1L;
+    private volatile Long idSecondPlayer = -1L;
+    private volatile Lobby lobbyToBeCreated = null;
 
-    void processMove(MovePieceRequest request) throws MovePieceException{
-        ChessGame currentGame=this.findGame(request.getIdPlayer());
-        if(currentGame==null)
-            throw new MovePieceException("Nu exista acest joc");
-        synchronized (currentGame){
 
+    public GamesManagerService(MoveValidator moveValidator) {
+        this.moveValidator = moveValidator;
+    }
+
+    public void processMove(MovePieceRequest request) throws MovePieceException {
+        Lobby currentGame = this.findGame(request.getIdPlayer());
+        if (currentGame == null) {
+            throw new MovePieceException("Game does not exist");
+        }
+
+        synchronized (currentGame) {
             currentGame.processMove(request);
-
-
         }
-
     }
-    ChessGame processJoinRequest(JoinGameRequest request){
+
+    public Lobby processJoinRequest(JoinGameRequest request) {
         try {
-           smallLock.lock();
-           while(idFirstPlayer!=-1 && idSecondPlayer!=-1){
+            smallLock.lock();
 
-           }
-           if(idFirstPlayer==-1)
-               idFirstPlayer= request.getIdPlayer();
-           else
-               idSecondPlayer= request.getIdPlayer();
-           smallLock.unlock();
+            while (idFirstPlayer != -1 && idSecondPlayer != -1) {
+                // Wait until a player slot becomes available
+            }
 
-           barrier1.await();
-           isGameCreated=false;
+            if (idFirstPlayer == -1) {
+                idFirstPlayer = request.getIdPlayer();
+            } else {
+                idSecondPlayer = request.getIdPlayer();
+            }
 
-           if(request.getIdPlayer().equals(idFirstPlayer)){
-                  Long idGame=(long) 5;
-                  gameToBeCreated=new ChessGame(idGame,idFirstPlayer,idSecondPlayer,new MoveValidator());
-                  isGameCreated=true;
-           }
+        } finally {
+            smallLock.unlock();
+        }
 
-           while(!isGameCreated){
+        try {
+            barrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+            System.out.println("Barrier problem: " + e.getMessage());
+            return null;
+        }
 
-           }
-           System.out.println("A game with id: "+gameToBeCreated.getIdGame()+" was created");
-           activeGames.put(request.getIdPlayer(),gameToBeCreated);
-           if(idFirstPlayer.equals(request.getIdPlayer()))
-               idFirstPlayer=(long) -1;
-           if(idSecondPlayer.equals((request.getIdPlayer())))
-               idSecondPlayer=(long)-1;
-
+        if (request.getIdPlayer().equals(idFirstPlayer)) {
+            Long idGame = 5L;
+            lobbyToBeCreated = new Lobby(idGame, idFirstPlayer, idSecondPlayer, moveValidator);
+            isGameCreated = true;
         }
 
 
-        catch (InterruptedException | BrokenBarrierException e ){
-            System.out.println("Probleme la bariera");
-            System.out.println(e.getMessage());
+        while (!isGameCreated) {
+            // Wait for game to be created
         }
+
+        System.out.println("Game with id: " + lobbyToBeCreated.getIdGame() + " was created");
+        activeGames.put(request.getIdPlayer(), lobbyToBeCreated);
+
+        if (idFirstPlayer.equals(request.getIdPlayer())) {
+            idFirstPlayer = -1L;
+        }
+        if (idSecondPlayer.equals(request.getIdPlayer())) {
+            idSecondPlayer = -1L;
+        }
+
         return activeGames.get(request.getIdPlayer());
-
     }
-    ChessGame findGame(Long idPlayer){
-         return activeGames.get(idPlayer);
+
+    public Lobby findGame(Long idPlayer) {
+        return activeGames.get(idPlayer);
     }
 }
 

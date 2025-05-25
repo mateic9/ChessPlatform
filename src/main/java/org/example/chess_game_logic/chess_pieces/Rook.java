@@ -1,41 +1,37 @@
 package org.example.chess_game_logic.chess_pieces;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.List;
 @Getter
-
-public class Queen implements PieceInterface {
-    private final int value = 9;
+public class Rook implements PieceInterface {
+    private final int value = 5;
     private final Color color;
+
+    @Setter
+    private boolean moved;
     private final List<ChessMoveType> moveTypes = Arrays.asList(
             ChessMoveType.Diagonal,
             ChessMoveType.Horizontal,
             ChessMoveType.Vertical
     );
 
-    Queen(Color color) {
+    Rook(Color color) {
         this.color = color;
+        this.moved=false;
     }
 
     @Override
     public String toString() {
-        return "Queen " + color;
+        return "Rook " + color;
     }
 
     public boolean canMove(Position curPosition, Position destPosition, ChessMoveType moveType, Board board) {
-        System.out.println("Tryong to perform move "+moveType+" on piece "+this);
         if (!moveTypes.contains(moveType)) return false;
+       return canMoveLinear(curPosition,destPosition ,moveType, board);
 
-        if (moveType == ChessMoveType.Vertical)
-            return canMoveLinear(curPosition, destPosition, moveType, board);
-        else if (moveType == ChessMoveType.Horizontal)
-            return canMoveLinear(curPosition, destPosition, moveType, board);
-        else if (moveType == ChessMoveType.Diagonal)
-            return canMoveLinear(curPosition, destPosition, moveType, board);
-
-        return false;
     }
 
     private boolean canMoveLinear(Position curPosition, Position destPosition, ChessMoveType moveType, Board board) {
@@ -52,15 +48,14 @@ public class Queen implements PieceInterface {
 
         while (curX != destX || curY != destY) {
             Position intermediatePos = new Position(curX, curY);
-            if (!board.isOnBoard(intermediatePos)) return true;
-            if (board.getPieceAt(intermediatePos) != null) break;
+            if (!board.isOnBoard(intermediatePos)) return false;
+            if (board.getPieceAt(intermediatePos) != null) return false;
             curX += offsetX;
             curY += offsetY;
         }
 
         // Final destination piece check
         PieceInterface pieceAtDest = board.getPieceAt(destPosition);
-        System.out.println("Encountered on move "+moveType+" "+pieceAtDest);
         if (pieceAtDest != null && (pieceAtDest.getColor() == color ))
             return false;
 
@@ -69,12 +64,12 @@ public class Queen implements PieceInterface {
     public boolean canCapture(Position curPosition, Position destPosition, ChessMoveType moveType, Board board){
         if(!moveTypes.contains(moveType))
             return false;
-      return canMoveLinear(curPosition,destPosition,moveType,board);
+        return canMoveLinear(curPosition, destPosition, moveType, board);
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "q";
+            return "r";
         else
-            return "Q";
+            return "R";
     }
 }
