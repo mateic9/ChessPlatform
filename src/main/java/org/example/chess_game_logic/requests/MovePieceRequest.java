@@ -1,8 +1,7 @@
-package org.example.chess_game_logic;
+package org.example.chess_game_logic.requests;
 
 import lombok.Getter;
 import org.example.chess_game_logic.chess_pieces.Position;
-import org.springframework.stereotype.Component;
 
 /**
  * Request object for moving a chess piece

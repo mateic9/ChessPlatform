@@ -1,6 +1,7 @@
 package org.example.chess_game_logic.chess_pieces;
 
 import lombok.Getter;
+import org.example.chess_game_logic.Board;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,7 +16,7 @@ public class Queen implements PieceInterface {
             ChessMoveType.Vertical
     );
 
-    Queen(Color color) {
+    public Queen(Color color) {
         this.color = color;
     }
 
@@ -52,7 +53,35 @@ public class Queen implements PieceInterface {
 
         while (curX != destX || curY != destY) {
             Position intermediatePos = new Position(curX, curY);
-            if (!board.isOnBoard(intermediatePos)) return true;
+            if (!board.isOnBoard(intermediatePos)) return false;
+            if (board.getPieceAt(intermediatePos) != null) break;
+            curX += offsetX;
+            curY += offsetY;
+        }
+
+        // Final destination piece check
+        PieceInterface pieceAtDest = board.getPieceAt(destPosition);
+        System.out.println("Encountered on move "+moveType+" "+pieceAtDest);
+        if (pieceAtDest != null && (pieceAtDest.getColor() == color || (pieceAtDest instanceof King) ))
+            return false;
+
+        return true;
+    }
+    public boolean canCapture(Position curPosition, Position destPosition, ChessMoveType moveType, Board board){
+        if(!moveTypes.contains(moveType))
+            return false;
+        int curX = curPosition.getX();
+        int curY = curPosition.getY();
+        int destX = destPosition.getX();
+        int destY = destPosition.getY();
+        int offsetX = moveType.getOffsetX(curPosition, destPosition);
+        int offsetY = moveType.getOffsetY(curPosition, destPosition);
+        curX += offsetX;
+        curY += offsetY;
+
+        while (curX != destX || curY != destY) {
+            Position intermediatePos = new Position(curX, curY);
+            if (!board.isOnBoard(intermediatePos)) return false;
             if (board.getPieceAt(intermediatePos) != null) break;
             curX += offsetX;
             curY += offsetY;
@@ -65,11 +94,6 @@ public class Queen implements PieceInterface {
             return false;
 
         return true;
-    }
-    public boolean canCapture(Position curPosition, Position destPosition, ChessMoveType moveType, Board board){
-        if(!moveTypes.contains(moveType))
-            return false;
-      return canMoveLinear(curPosition,destPosition,moveType,board);
     }
     public String getSymbol(){
         if(color==Color.White)

@@ -27,5 +27,8 @@ public class Position {
         return o.getX()==this.getX() && o.getY()==this.getY();
     }
 
-
+    @Override
+    public String toString() {
+       return "Position ("+this.getX()+" , "+this.getY()+")";
+    }
 }

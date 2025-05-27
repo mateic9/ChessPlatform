@@ -1,5 +1,6 @@
 package org.example.chess_game_logic;
-import org.example.chess_game_logic.chess_pieces.MoveValidator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -28,7 +29,7 @@ public class GamesManagerService {
         this.moveValidator = moveValidator;
     }
 
-    public void processMove(MovePieceRequest request) throws MovePieceException {
+    public void processMove(MovePieceRequest request) throws MovePieceException, JsonProcessingException {
         Lobby currentGame = this.findGame(request.getIdPlayer());
         if (currentGame == null) {
             throw new MovePieceException("Game does not exist");

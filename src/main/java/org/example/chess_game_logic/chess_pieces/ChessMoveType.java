@@ -1,11 +1,7 @@
 package org.example.chess_game_logic.chess_pieces;
 
-import org.example.chess_game_logic.MovePieceRequest;
-
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 public enum ChessMoveType {
     WrongMove{
@@ -30,6 +26,7 @@ public enum ChessMoveType {
         public int getOffsetY(Position c, Position d) {
             return 0;
         }
+
     },
 
     Horizontal {
@@ -87,6 +84,23 @@ public enum ChessMoveType {
     }
     public int getOffsetY(Position curPosition,Position destPosition){
         throw new UnsupportedOperationException("Offsets not defined for " + this.name());
+    }
+    public List<Position> getPath(Position start,Position end){
+        List<Position> response=new ArrayList<Position>();
+        int offsetX=this.getOffsetX(start,end);
+        int offsetY=this.getOffsetY(start,end);
+        int curX= start.getX()+offsetX;
+        int curY=start.getY()+offsetY;
+        System.out.println("Start: "+start);
+        System.out.println("End: "+end);
+        while(curX!= end.getX()|| curY!=end.getY()){
+            Position p= new Position(curX,curY);
+            response.add(p);
+            System.out.println(p);
+            curX+=offsetX;
+            curY+=offsetY;
+        }
+        return response;
     }
 
 }

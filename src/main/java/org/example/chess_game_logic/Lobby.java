@@ -1,11 +1,15 @@
 package org.example.chess_game_logic;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
-import org.example.chess_game_logic.chess_pieces.MoveValidator;
+import lombok.Setter;
 import org.example.chess_game_logic.chess_pieces.ChessMoveType;
 import org.example.chess_game_logic.chess_pieces.Color;
-import org.example.entities.PromInfoNeededException;
-
+import org.example.chess_game_logic.requests.MovePieceRequest;
+import org.example.chess_game_logic.requests.PromotePieceRequest;
+import org.example.exceptions.GameOverException;
+import org.example.exceptions.PromInfoNeededException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
 
 public class Lobby {
@@ -18,7 +22,8 @@ public class Lobby {
     private final MoveValidator moveValidator;
     private volatile Long currentPlayerId;
     private volatile boolean needsPromotionInfo=false;
-
+    @Setter
+    private volatile  boolean stillPlaying=true;
     public Lobby(Long idGame, Long idPlayer1, Long idPlayer2, MoveValidator moveValidator) {
         this.idGame = idGame;
         this.idPlayer1 = idPlayer1;
@@ -27,7 +32,10 @@ public class Lobby {
         this.currentPlayerId = idPlayer1;
     }
 
-    public synchronized void processMove(MovePieceRequest request) {
+    public synchronized void processMove(MovePieceRequest request) throws JsonProcessingException {
+        System.out.println("Is game still going?:"+stillPlaying);
+        if(!stillPlaying)
+            throw new GameOverException("This game is over!");
         try {
             if(needsPromotionInfo)
                 throw new MovePieceException("Server can't respond to this request now!");
@@ -51,15 +59,22 @@ public class Lobby {
             needsPromotionInfo=true;
             throw e;
         }
+        catch (GameOverException e){
+            stillPlaying=false;
+            GameResult result=this.getGameOverResponse(e.getMessage());
+            throw new GameOverException(result.toString() );
+        }
 
 
     }
     public void processPromoteRequest(PromotePieceRequest request){
         if(!needsPromotionInfo)
             throw new RuntimeException("You can't promote!");
-        if(request.getIdPlayer()!=currentPlayerId)
+        if(!Objects.equals(request.getIdPlayer(), currentPlayerId))
             throw new RuntimeException("Wait your turn!");
         moveValidator.promote(request);
+        needsPromotionInfo=false;
+        switchPlayer();
     }
 
     private void switchPlayer() {
@@ -102,5 +117,13 @@ public class Lobby {
         if (isKnightMove(xCurrent,yCurrent,xDest,yDest))
             return ChessMoveType.KnightMove;
         return ChessMoveType.WrongMove;
+    }
+    public GameResult getGameOverResponse(String s){
+        String message="";
+        if(s.contains("Win"))
+            return new GameResult("Win",currentPlayerId);
+        else
+            return new GameResult("Draw",null);
+
     }
 }

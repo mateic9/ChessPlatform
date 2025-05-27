@@ -2,9 +2,13 @@ package org.example.chess_game_logic.chess_pieces;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.chess_game_logic.Board;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 @Getter
 
 public class King implements PieceInterface {
@@ -18,7 +22,7 @@ public class King implements PieceInterface {
             ChessMoveType.Vertical
     );
 
-    King(Color color) {
+    public King(Color color) {
         this.color = color;
         this.moved = false;
     }
@@ -60,6 +64,7 @@ public class King implements PieceInterface {
         PieceInterface encounteredPiece = board.getPieceAt(destPosition);
         return encounteredPiece == null ||
                 (!(encounteredPiece instanceof King) && encounteredPiece.getColor() != color);
+
     }
 
     public boolean canMoveHorizontal(Position curPosition, Position destPosition, ChessMoveType moveType, Board board) {
@@ -70,7 +75,7 @@ public class King implements PieceInterface {
         return false;
     }
 
-    Position getPositionCastle(Position kingPos, Position destPos, ChessMoveType moveType,Board board) {
+   public Position getPositionCastle(Position kingPos, Position destPos, ChessMoveType moveType,Board board) {
         if(moveType!=ChessMoveType.Horizontal)
             return null;
         int difY = Math.abs(kingPos.getY() - destPos.getY());
@@ -103,10 +108,28 @@ public class King implements PieceInterface {
     public boolean canCapture(Position curPosition, Position destPosition, ChessMoveType moveType, Board board){
         if(!moveTypes.contains(moveType))
             return false;
-       return canMoveLinear(curPosition,destPosition,moveType,board);
+        int offsetX = moveType.getOffsetX(curPosition, destPosition);
+        int offsetY = moveType.getOffsetY(curPosition, destPosition);
+
+        int curX = curPosition.getX();
+        int curY = curPosition.getY();
+        int destX = destPosition.getX();
+        int destY = destPosition.getY();
+
+        curX += offsetX;
+        curY += offsetY;
+
+        Position newPos = new Position(curX, curY);
+        if (!newPos.equals(destPosition)) return false;
+
+        PieceInterface encounteredPiece = board.getPieceAt(destPosition);
+//        return encounteredPiece == null ||
+//                (!(encounteredPiece instanceof King) && encounteredPiece.getColor() != color);
+        return encounteredPiece == null || encounteredPiece.getColor() != color;
     }
-    public boolean isInCheck(Board board) {
+    public Map<Position,ChessMoveType> getCheckDirections(Board board) {
         Position kingPos = board.getKingPozMap().get(color);  // assumes this King is the current player's king
+        HashMap<Position,ChessMoveType> response=new HashMap<Position,ChessMoveType>();
 
         List<ChessMoveType> directions = Arrays.asList(
                 ChessMoveType.Vertical,
@@ -133,7 +156,7 @@ public class King implements PieceInterface {
                         if (piece.getColor() != color &&
                                 piece.canCapture(pos, kingPos, dir, board)) {
                             System.out.println(piece + "attacks "+this);
-                            return true;  // King is in check
+                            response.put(pos,dir);
                         } else {
                             break;  // blocked by own piece or wrong opponent piece
                         }
@@ -143,6 +166,7 @@ public class King implements PieceInterface {
                 }
             }
         }
+        System.out.println("First king check "+board.getKingPozMap().get(color));
        System.out.println("all checks made!");
         // Add knight check
         int[][] knightMoves = {
@@ -154,10 +178,11 @@ public class King implements PieceInterface {
             if (board.isOnBoard(knightPos)) {
                 PieceInterface p = board.getPieceAt(knightPos);
                 if (p != null && p.getColor() != color && p instanceof Knight) {
-                    return true;
+                   response.put(knightPos,ChessMoveType.KnightMove);
                 }
             }
         }
+        System.out.println("After knight check: "+board.getKingPozMap().get(color));
 //
 //        // Add pawn check (simplified logic, assuming white moves up and black moves down)
 //        int pawnDir = (color == Color.WHITE) ? -1 : 1;
@@ -172,7 +197,7 @@ public class King implements PieceInterface {
 //            }
 //        }
 
-        return false;
+        return response;
     }
 
     private int[][] getOffsetsForDirection(ChessMoveType moveType) {

@@ -3,7 +3,11 @@ package org.example.chess_game_logic;
 
 
 
-import org.example.entities.PromInfoNeededException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.example.chess_game_logic.requests.MovePieceRequest;
+import org.example.chess_game_logic.requests.PromotePieceRequest;
+import org.example.exceptions.GameOverException;
+import org.example.exceptions.PromInfoNeededException;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
 
@@ -57,10 +61,17 @@ public class GameController {
        catch(PromInfoNeededException e){
            return ResponseEntity.status(202).body(e.getMessage());
        }
+       catch (GameOverException e){
+           return  ResponseEntity.ok(e.getMessage());
+       }
+       catch (JsonProcessingException e){
+           return   ResponseEntity.status(400).body("Json Problem: "+e.getMessage());
+       }
        catch(Exception e) {
            return ResponseEntity.status(HttpStatus.NOT_FOUND)
                    .body(e.getMessage());
        }
+
     }
 
     @PostMapping("/promote-piece")
@@ -70,9 +81,13 @@ public class GameController {
             gameManager.findGame(request.getIdPlayer()).processPromoteRequest(request);
             return ResponseEntity.ok("Promotion done!");
         }
+        catch (GameOverException e){
+            return  ResponseEntity.ok(e.getMessage());
+        }
         catch (MovePieceException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(e.getMessage());
         }
+
     }
 }

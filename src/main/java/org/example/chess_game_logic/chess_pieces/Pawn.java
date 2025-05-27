@@ -4,6 +4,7 @@ package org.example.chess_game_logic.chess_pieces;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.chess_game_logic.Board;
 
 import java.util.Arrays;
 import java.util.List;

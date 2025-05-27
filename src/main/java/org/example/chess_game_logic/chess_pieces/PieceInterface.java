@@ -1,4 +1,6 @@
 package org.example.chess_game_logic.chess_pieces;
+import org.example.chess_game_logic.Board;
+
 import java.util.List;
 public interface PieceInterface {
 

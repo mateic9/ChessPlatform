@@ -2,6 +2,7 @@ package org.example.chess_game_logic.chess_pieces;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.chess_game_logic.Board;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +19,7 @@ public class Rook implements PieceInterface {
             ChessMoveType.Vertical
     );
 
-    Rook(Color color) {
+    public Rook(Color color) {
         this.color = color;
         this.moved=false;
     }
@@ -56,7 +57,7 @@ public class Rook implements PieceInterface {
 
         // Final destination piece check
         PieceInterface pieceAtDest = board.getPieceAt(destPosition);
-        if (pieceAtDest != null && (pieceAtDest.getColor() == color ))
+        if (pieceAtDest != null && (pieceAtDest.getColor() == color ||(pieceAtDest instanceof King)))
             return false;
 
         return true;
@@ -64,7 +65,31 @@ public class Rook implements PieceInterface {
     public boolean canCapture(Position curPosition, Position destPosition, ChessMoveType moveType, Board board){
         if(!moveTypes.contains(moveType))
             return false;
-        return canMoveLinear(curPosition, destPosition, moveType, board);
+        int offsetX = moveType.getOffsetX(curPosition, destPosition);
+        int offsetY = moveType.getOffsetY(curPosition, destPosition);
+
+        int curX = curPosition.getX();
+        int curY = curPosition.getY();
+        int destX = destPosition.getX();
+        int destY = destPosition.getY();
+
+        curX += offsetX;
+        curY += offsetY;
+
+        while (curX != destX || curY != destY) {
+            Position intermediatePos = new Position(curX, curY);
+            if (!board.isOnBoard(intermediatePos)) return false;
+            if (board.getPieceAt(intermediatePos) != null) return false;
+            curX += offsetX;
+            curY += offsetY;
+        }
+
+        // Final destination piece check
+        PieceInterface pieceAtDest = board.getPieceAt(destPosition);
+        if (pieceAtDest != null && (pieceAtDest.getColor() == color ))
+            return false;
+
+        return true;
     }
     public String getSymbol(){
         if(color==Color.White)
