@@ -93,8 +93,8 @@ public class Rook implements PieceInterface {
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "r";
-        else
             return "R";
+        else
+            return "r";
     }
 }

@@ -128,6 +128,7 @@ public class King implements PieceInterface {
         return encounteredPiece == null || encounteredPiece.getColor() != color;
     }
     public Map<Position,ChessMoveType> getCheckDirections(Board board) {
+        System.out.println("Getting check directions for "+this);
         Position kingPos = board.getKingPozMap().get(color);  // assumes this King is the current player's king
         HashMap<Position,ChessMoveType> response=new HashMap<Position,ChessMoveType>();
 
@@ -214,9 +215,9 @@ public class King implements PieceInterface {
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "k";
-        else
             return "K";
+        else
+            return "k";
     }
 
 

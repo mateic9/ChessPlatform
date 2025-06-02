@@ -41,9 +41,9 @@ public class Knight implements PieceInterface {
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "n";
-        else
             return "N";
+        else
+            return "n";
     }
 
 }

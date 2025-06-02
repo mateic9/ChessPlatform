@@ -144,6 +144,31 @@ public class Board {
                 }
           return piecesLeft;
     }
+    public String getFen(){
+        StringBuilder fenReprez= new StringBuilder();
+        StringBuilder row;
+        int i,j,emptySpaces;
+        for( i=0;i<=7;i++){
+            row = new StringBuilder();
+            emptySpaces=0;
+            for(j=0;j<=7;j++)
+              if(board[i][j]==null)
+                  emptySpaces+=1;
+              else{
+                  if(emptySpaces!=0)
+                    row.append(emptySpaces);
+                  emptySpaces=0;
+                  row.append(board[i][j].getSymbol());
+              }
+              if(emptySpaces!=0)
+                  row.append(emptySpaces);
+              if(i!=7)
+                row.append("/");
+            fenReprez.append(row);
+        }
+
+        return fenReprez.toString();
+    }
 
 
 }

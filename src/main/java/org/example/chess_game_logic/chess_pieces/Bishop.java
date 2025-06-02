@@ -94,8 +94,8 @@ public class Bishop implements PieceInterface{
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "b";
-        else
             return "B";
+        else
+            return "b";
     }
 }

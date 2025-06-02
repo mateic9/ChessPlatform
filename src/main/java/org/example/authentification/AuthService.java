@@ -1,13 +1,21 @@
 package org.example.authentification;
 
 
+import lombok.Getter;
 import org.example.entities.UserRepo;
 import org.springframework.stereotype.Service;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 @Service
 public class AuthService implements AuthServiceInterface {
+    @Getter
     private UserRepo userRepo;
+    @Getter
+    private Map<Long,Integer> userAddressMap =new HashMap<Long,Integer>();
     AuthService(UserRepo userRepo){
         this.userRepo=userRepo;
 
@@ -20,16 +28,19 @@ public class AuthService implements AuthServiceInterface {
     }
 
 
-    public boolean authenticate(String username, String rawPassword) throws FailedLogin {
-          return userRepo.findByUsername(username)
-                .map(user -> {
-                    if (user.getEnc_password().equals(rawPassword)) { // TODO: replace with passwordEncoder.matches
-                        return true;
-                    } else {
-                        throw new FailedLogin();
-                    }
-                })
-                .orElseThrow(() -> new FailedLogin());
+    public Long authenticate(LoginRequest request)throws FailedLogin {
+
+          Optional<User>   userOpt=userRepo.findByUsername(request.getUsername());
+          if(userOpt.isEmpty())
+              throw new FailedLogin("No user with this username: "+request.getUsername());
+          if(!userOpt.get().getEnc_password().equals(request.getPassword()))
+              throw new FailedLogin("Credentials don't match");
+          long idPlayer= userOpt.get().getId();
+          userAddressMap.put(idPlayer, request.getPort());
+          return idPlayer;
+
     }
+
+
 
 }

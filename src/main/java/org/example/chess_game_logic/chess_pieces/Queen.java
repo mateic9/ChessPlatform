@@ -97,8 +97,8 @@ public class Queen implements PieceInterface {
     }
     public String getSymbol(){
         if(color==Color.White)
-            return "q";
-        else
             return "Q";
+        else
+            return "q";
     }
 }

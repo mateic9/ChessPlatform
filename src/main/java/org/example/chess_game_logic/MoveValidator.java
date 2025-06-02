@@ -1,5 +1,6 @@
 package org.example.chess_game_logic;
 
+import lombok.Getter;
 import org.example.chess_game_logic.chess_pieces.*;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
@@ -16,7 +17,7 @@ import java.util.Map;
 @Component
 @Scope("prototype")
 public class MoveValidator {
-
+   @Getter
     private final Board board;
     private Position promotePos;
     private  Map<Position,ChessMoveType> attacksOnKing=new HashMap<Position,ChessMoveType>();
@@ -58,7 +59,7 @@ public class MoveValidator {
       PieceInterface selectedKing= board.getPieceAt(p);
 
       if(!(selectedKing instanceof King))
-          throw new MovePieceException("King check not done");
+          throw new MovePieceException("Position of king was lost");
       if(!this.isKingSafe(curPosition,destPosition,board,playerColor))
           throw new MovePieceException("King "+playerColor+" is in check!" );
       board.movePiece(curPosition,destPosition);
@@ -77,6 +78,7 @@ public class MoveValidator {
           board.printBoard();
           throw new GameOverException("Win");
       }
+      System.out.println("The game isn't over");
       System.out.println("Board config:");
       board.printBoard();
     }
@@ -164,7 +166,7 @@ public class MoveValidator {
     }
 
     public boolean isGameOver(Color curPlayerColor,Board board) {
-//      System.out.println("here ni**a");
+
         Color oppPlayerColor=Color.White;
         switch (curPlayerColor) {
             case White:
@@ -176,19 +178,19 @@ public class MoveValidator {
         }
         Position  oppKingPoz=board.getKingPozMap().get(oppPlayerColor);
        List<Position> availableKingPos=board.getFutureKingPos(oppPlayerColor);
-       System.out.println("Available positions: "+availableKingPos.size());
-
-
-
+//       System.out.println("Available positions: "+availableKingPos.size());
+        King oppKing=(King)board.getPieceAt(oppKingPoz);
+         if(oppKing.getCheckDirections(board).isEmpty())
+             return false;
+         System.out.println("King in check!");
        for(Position pozToRun: availableKingPos) {
-            System.out.println("testing for position: "+pozToRun);
+
 
            if (this.isKingSafe(oppKingPoz, pozToRun, board, oppPlayerColor)) {
                System.out.println("King escapes here:" + pozToRun);
                return false;
            }
-           System.out.println("Doing king check: "+board.getKingPozMap().get(oppPlayerColor));
-           System.out.println("Printing piece: "+board.getPieceAt(board.getKingPozMap().get(oppPlayerColor)));
+
        }
 
 //       System.out.println("No position for king "+oppPlayerColor+ " to run!");

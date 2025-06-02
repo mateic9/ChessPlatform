@@ -78,7 +78,7 @@ public class Pawn implements PieceInterface {
     }
 
     public String getSymbol() {
-        return (color == Color.White) ? "p" : "P";
+        return (color == Color.White) ? "P" : "p";
     }
     public boolean canPromote(Position destPosition){
         if(color==Color.White&&destPosition.getX()==7)

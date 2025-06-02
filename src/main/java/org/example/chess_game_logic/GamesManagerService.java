@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class GamesManagerService {
 
     private final MoveValidator moveValidator;
-    private final Map<Long, Lobby> activeGames = new ConcurrentHashMap<>();
+    private final Map<Long, Lobby> activeLobbies = new ConcurrentHashMap<>();
     private final ReentrantLock smallLock = new ReentrantLock();
     private final CyclicBarrier barrier = new CyclicBarrier(2, () -> {
         System.out.println("Barrier reached!");
@@ -30,7 +30,7 @@ public class GamesManagerService {
     }
 
     public void processMove(MovePieceRequest request) throws MovePieceException, JsonProcessingException {
-        Lobby currentGame = this.findGame(request.getIdPlayer());
+        Lobby currentGame = this.findLobby(request.getIdPlayer());
         if (currentGame == null) {
             throw new MovePieceException("Game does not exist");
         }
@@ -77,7 +77,7 @@ public class GamesManagerService {
         }
 
         System.out.println("Game with id: " + lobbyToBeCreated.getIdGame() + " was created");
-        activeGames.put(request.getIdPlayer(), lobbyToBeCreated);
+        activeLobbies.put(request.getIdPlayer(), lobbyToBeCreated);
 
         if (idFirstPlayer.equals(request.getIdPlayer())) {
             idFirstPlayer = -1L;
@@ -85,12 +85,11 @@ public class GamesManagerService {
         if (idSecondPlayer.equals(request.getIdPlayer())) {
             idSecondPlayer = -1L;
         }
-
-        return activeGames.get(request.getIdPlayer());
+        return activeLobbies.get(request.getIdPlayer());
     }
 
-    public Lobby findGame(Long idPlayer) {
-        return activeGames.get(idPlayer);
+    public Lobby findLobby(Long idPlayer) {
+        return activeLobbies.get(idPlayer);
     }
 }
 

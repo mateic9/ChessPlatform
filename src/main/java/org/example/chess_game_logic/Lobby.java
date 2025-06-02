@@ -10,6 +10,8 @@ import org.example.chess_game_logic.requests.PromotePieceRequest;
 import org.example.exceptions.GameOverException;
 import org.example.exceptions.PromInfoNeededException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.lang.invoke.SwitchPoint;
 import java.util.Objects;
 
 public class Lobby {
@@ -19,6 +21,7 @@ public class Lobby {
     private final Long idPlayer1;
     @Getter
     private final Long idPlayer2;
+    @Getter
     private final MoveValidator moveValidator;
     private volatile Long currentPlayerId;
     private volatile boolean needsPromotionInfo=false;
@@ -76,7 +79,17 @@ public class Lobby {
         needsPromotionInfo=false;
         switchPlayer();
     }
+    public void forfeit(Long idPlayer){
 
+        GameResult gameResult;
+        if (Objects.equals(idPlayer, idPlayer1)) {
+            gameResult = new GameResult("Win", idPlayer2);
+        } else
+            gameResult = new GameResult("Win", idPlayer1);
+        stillPlaying=false;
+        throw new GameOverException(gameResult.toString());
+
+    }
     private void switchPlayer() {
         currentPlayerId = currentPlayerId.equals(idPlayer1) ? idPlayer2 : idPlayer1;
         System.out.println("Current player: " + currentPlayerId);
@@ -126,4 +139,5 @@ public class Lobby {
             return new GameResult("Draw",null);
 
     }
+
 }
