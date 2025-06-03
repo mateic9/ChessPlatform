@@ -3,9 +3,11 @@ package org.example.authentification;
 
 import lombok.Getter;
 import org.example.entities.UserRepo;
+//import org.example.websocker.SocketRegistry;
 import org.springframework.stereotype.Service;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +17,11 @@ public class AuthService implements AuthServiceInterface {
     @Getter
     private UserRepo userRepo;
     @Getter
-    private Map<Long,Integer> userAddressMap =new HashMap<Long,Integer>();
+   private Map<Long,Integer> userAddressMap =new HashMap<Long,Integer>();
+//    private final SocketRegistry socketRegistry;
     AuthService(UserRepo userRepo){
         this.userRepo=userRepo;
-
+//        this.socketRegistry=socketRegistry;
     }
 
 
@@ -36,7 +39,8 @@ public class AuthService implements AuthServiceInterface {
           if(!userOpt.get().getEnc_password().equals(request.getPassword()))
               throw new FailedLogin("Credentials don't match");
           long idPlayer= userOpt.get().getId();
-          userAddressMap.put(idPlayer, request.getPort());
+//          userAddressMap.put(idPlayer, request.getPort());
+//          socketRegistry.add(idPlayer, new WebSocketSession());
           return idPlayer;
 
     }

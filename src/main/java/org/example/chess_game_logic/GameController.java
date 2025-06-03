@@ -11,13 +11,15 @@ import org.example.exceptions.GameOverException;
 import org.example.exceptions.PromInfoNeededException;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
+import org.example.websocket.WebSocketController;
 
-
+//import org.example.websocker.SocketRegistry;
+//import org.example.websocker.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +32,8 @@ public class GameController {
     private final GamesManagerService gameManager;
     private final AuthService authService;
     private final UserRepo userRepo;
+    @Autowired
+    private WebSocketController wsCont;
 
     @Autowired
     public GameController(GamesManagerService gameManager, UserRepo userRepo,AuthService authService) {
@@ -159,28 +163,20 @@ public class GameController {
         }
 
     }
-    private void  sendOpponentChessboardConfig(Long idPlayer,String fen){
-        Lobby lobby=gameManager.findLobby(idPlayer);
-        Long opponentId;
-        Map<String,Object> jsonBody=new HashMap<String,Object>();
-        if(idPlayer.equals(lobby.getIdPlayer1()))
-            opponentId=lobby.getIdPlayer2();
-        else
-            opponentId=lobby.getIdPlayer1();
-        String url = "http://" + "127.0.0.1" + ":" +  authService.getUserAddressMap().get(opponentId) + "/receive-message";
+    private void sendOpponentChessboardConfig(Long playerId, String fen) {
+        Lobby lobby = gameManager.findLobby(playerId);
+        Long opponentId = playerId.equals(lobby.getIdPlayer1())
+                ? lobby.getIdPlayer2()
+                : lobby.getIdPlayer1();
 
         try {
-            RestTemplate restTemplate = new RestTemplate();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            jsonBody.put("board",fen);
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(jsonBody, headers);
-
-            restTemplate.postForEntity(url, request, String.class);
+//            socketRegistry.send(opponentId, Map.of("board", fen));
+            wsCont.send(opponentId,fen);
         } catch (Exception e) {
-            System.err.println("Failed to notify client " + opponentId + ": " + e.getMessage());
-        }
 
+           System.out.println("Could not push board to {}"+opponentId);
+           System.out.println(e.getMessage());
+        }
     }
+    
 }
