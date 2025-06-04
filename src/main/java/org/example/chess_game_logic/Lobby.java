@@ -8,10 +8,9 @@ import org.example.chess_game_logic.chess_pieces.Color;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
 import org.example.exceptions.GameOverException;
+import org.example.exceptions.MovePieceException;
 import org.example.exceptions.PromInfoNeededException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.lang.invoke.SwitchPoint;
 import java.util.Objects;
 
 public class Lobby {
@@ -79,15 +78,16 @@ public class Lobby {
         needsPromotionInfo=false;
         switchPlayer();
     }
-    public void forfeit(Long idPlayer){
-
+    public GameResult forfeit(Long idPlayer){
+        String message="Player resigned!";
         GameResult gameResult;
         if (Objects.equals(idPlayer, idPlayer1)) {
-            gameResult = new GameResult("Win", idPlayer2);
+            gameResult = new GameResult("Win", idPlayer2,message);
         } else
-            gameResult = new GameResult("Win", idPlayer1);
+            gameResult = new GameResult("Win", idPlayer1,message);
+        System.out.println("Lobby fct: "+gameResult);
         stillPlaying=false;
-        throw new GameOverException(gameResult.toString());
+       return gameResult;
 
     }
     private void switchPlayer() {
@@ -132,11 +132,11 @@ public class Lobby {
         return ChessMoveType.WrongMove;
     }
     public GameResult getGameOverResponse(String s){
-        String message="";
+        String message="Chec";
         if(s.contains("Win"))
-            return new GameResult("Win",currentPlayerId);
+            return new GameResult("Win",currentPlayerId,"Check mate!");
         else
-            return new GameResult("Draw",null);
+            return new GameResult("Draw",null,"Check mate!");
 
     }
 

@@ -5,9 +5,12 @@ package org.example.chess_game_logic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.authentification.AuthService;
+import org.example.chess_game_logic.requests.ForfeitRequest;
+import org.example.chess_game_logic.requests.JoinGameRequest;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
 import org.example.exceptions.GameOverException;
+import org.example.exceptions.MovePieceException;
 import org.example.exceptions.PromInfoNeededException;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
@@ -19,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -163,6 +165,22 @@ public class GameController {
         }
 
     }
+    @PostMapping("/forfeit")
+    public ResponseEntity<Map<String,Object>> forfeit(@RequestBody ForfeitRequest request){
+        try {
+            System.out.println("initiator forfeit: "+ request.getIdPlayer());
+            GameResult result = gameManager.findLobby(request.getIdPlayer()).forfeit(request.getIdPlayer());
+            sendForfeit(request.getIdPlayer(),result);
+            return ResponseEntity.ok(result.toJson());
+        }
+        catch(Exception e){
+            Map<String,Object> body=new HashMap<String,Object>();
+            body.put("succes",false);
+            body.put("message",e.getMessage());
+            return  ResponseEntity.status(500).body(body);
+        }
+
+    }
     private void sendOpponentChessboardConfig(Long playerId, String fen) {
         Lobby lobby = gameManager.findLobby(playerId);
         Long opponentId = playerId.equals(lobby.getIdPlayer1())
@@ -171,11 +189,26 @@ public class GameController {
 
         try {
 //            socketRegistry.send(opponentId, Map.of("board", fen));
-            wsCont.send(opponentId,fen);
+            wsCont.sendChessboard(opponentId,fen);
         } catch (Exception e) {
 
            System.out.println("Could not push board to {}"+opponentId);
            System.out.println(e.getMessage());
+        }
+    }
+    private void sendForfeit(Long playerId,GameResult result){
+        Lobby lobby = gameManager.findLobby(playerId);
+        Long opponentId = playerId.equals(lobby.getIdPlayer1())
+                ? lobby.getIdPlayer2()
+                : lobby.getIdPlayer1();
+
+        try {
+//            socketRegistry.send(opponentId, Map.of("board", fen));
+            wsCont.sendForfeit(opponentId,result.toJson());
+        } catch (Exception e) {
+
+            System.out.println("Could not push board to {}"+opponentId);
+            System.out.println(e.getMessage());
         }
     }
     

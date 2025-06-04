@@ -1,6 +1,8 @@
 package org.example.chess_game_logic;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.example.chess_game_logic.requests.JoinGameRequest;
 import org.example.chess_game_logic.requests.MovePieceRequest;
+import org.example.exceptions.MovePieceException;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;

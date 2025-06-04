@@ -1,4 +1,4 @@
-package org.example.chess_game_logic;
+package org.example.chess_game_logic.requests;
 
 
 import lombok.Getter;

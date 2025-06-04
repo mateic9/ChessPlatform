@@ -2,7 +2,7 @@ package org.example.chess_game_logic;
 
 import lombok.Getter;
 import org.example.chess_game_logic.chess_pieces.*;
-import org.example.chess_game_logic.requests.MovePieceRequest;
+import org.example.exceptions.MovePieceException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 

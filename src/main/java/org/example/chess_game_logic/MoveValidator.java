@@ -5,6 +5,7 @@ import org.example.chess_game_logic.chess_pieces.*;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
 import org.example.exceptions.GameOverException;
+import org.example.exceptions.MovePieceException;
 import org.example.exceptions.PromInfoNeededException;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
