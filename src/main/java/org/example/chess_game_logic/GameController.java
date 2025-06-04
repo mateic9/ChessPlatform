@@ -9,6 +9,7 @@ import org.example.chess_game_logic.requests.ForfeitRequest;
 import org.example.chess_game_logic.requests.JoinGameRequest;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
+import org.example.exceptions.ErrorMessage;
 import org.example.exceptions.GameOverException;
 import org.example.exceptions.MovePieceException;
 import org.example.exceptions.PromInfoNeededException;
@@ -120,8 +121,11 @@ public class GameController {
            response.put("message",e.getMessage());
            response.put("board",fenRep);
            sendOpponentChessboardConfig(request.getIdPlayer(),fenRep);
+           sendOpponentGameOverMessage(request.getIdPlayer(), e.getMessage());
+           sendCurrentPlayerGameOverMessage(request.getIdPlayer(),e.getMessage());
            System.out.println("Game Over exception: "+e.getMessage());
-           return ResponseEntity.status(202).body(response);
+
+           return ResponseEntity.ok(response);
        }
        catch (JsonProcessingException e){
            response.put("success",false);
@@ -155,6 +159,7 @@ public class GameController {
             response.put("success",true);
             response.put("message",e.getMessage());
             response.put("board",fenRep);
+//            ws.sendOpponentChessBoard()
             return  ResponseEntity.ok(response);
         }
         catch (MovePieceException e) {
@@ -205,6 +210,49 @@ public class GameController {
         try {
 //            socketRegistry.send(opponentId, Map.of("board", fen));
             wsCont.sendForfeit(opponentId,result.toJson());
+        } catch (Exception e) {
+
+            System.out.println("Could not push board to {}"+opponentId);
+            System.out.println(e.getMessage());
+        }
+    }
+    private void sendCurrentPlayerGameOverMessage(Long playerId, String reason){
+        GameResult gameResult;
+        if(reason.equals(ErrorMessage.RunOutOfTime.get()))
+            gameResult=new GameResult("Loss",reason);
+        else
+        if(reason.equals(ErrorMessage.Draw.get()))
+            gameResult=new GameResult("Draw",reason);
+        else
+            gameResult=new GameResult("Win, Boss!",reason);
+
+        try {
+
+            wsCont.sendGameOverMessage(playerId,gameResult.toJson());
+        } catch (Exception e) {
+
+            System.out.println("Could not push board to {}"+playerId);
+            System.out.println(e.getMessage());
+        }
+    }
+    private void sendOpponentGameOverMessage(Long playerId, String reason){
+
+        Lobby lobby = gameManager.findLobby(playerId);
+        Long opponentId = playerId.equals(lobby.getIdPlayer1())
+                ? lobby.getIdPlayer2()
+                : lobby.getIdPlayer1();
+       GameResult gameResult;
+      if(reason.equals(ErrorMessage.RunOutOfTime.get()))
+          gameResult=new GameResult("Win",reason);
+      else
+          if(reason.equals(ErrorMessage.Draw.get()))
+              gameResult=new GameResult("Draw",reason);
+          else
+              gameResult=new GameResult("Loss",reason);
+
+        try {
+
+            wsCont.sendGameOverMessage(opponentId,gameResult.toJson());
         } catch (Exception e) {
 
             System.out.println("Could not push board to {}"+opponentId);

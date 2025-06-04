@@ -4,6 +4,7 @@ import lombok.Getter;
 import org.example.chess_game_logic.chess_pieces.*;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
+import org.example.exceptions.ErrorMessage;
 import org.example.exceptions.GameOverException;
 import org.example.exceptions.MovePieceException;
 import org.example.exceptions.PromInfoNeededException;
@@ -77,7 +78,7 @@ public class MoveValidator {
           System.out.println("GAME OVER!");
           System.out.println("Board config:");
           board.printBoard();
-          throw new GameOverException("Win");
+          throw new GameOverException(ErrorMessage.CheckMate.get());
       }
       System.out.println("The game isn't over");
       System.out.println("Board config:");

@@ -7,10 +7,13 @@ import org.example.chess_game_logic.chess_pieces.ChessMoveType;
 import org.example.chess_game_logic.chess_pieces.Color;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
+import org.example.exceptions.ErrorMessage;
 import org.example.exceptions.GameOverException;
 import org.example.exceptions.MovePieceException;
 import org.example.exceptions.PromInfoNeededException;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class Lobby {
@@ -26,18 +29,27 @@ public class Lobby {
     private volatile boolean needsPromotionInfo=false;
     @Setter
     private volatile  boolean stillPlaying=true;
-    public Lobby(Long idGame, Long idPlayer1, Long idPlayer2, MoveValidator moveValidator) {
+    private Thread threadTimer;
+    Map<Long,Timer> timerMap=new HashMap<Long,Timer>();
+    public Lobby(Long idGame, Long idPlayer1, Long idPlayer2, MoveValidator moveValidator,int nrMinutes) {
         this.idGame = idGame;
         this.idPlayer1 = idPlayer1;
         this.idPlayer2 = idPlayer2;
         this.moveValidator = moveValidator;
         this.currentPlayerId = idPlayer1;
+        Timer timer1=new Timer(nrMinutes);
+        Timer timer2=new Timer(nrMinutes);
+        timerMap.put(idPlayer1,timer1);
+        timerMap.put(idPlayer2,timer2);
+        threadTimer=new Thread(timerMap.get(idPlayer1));
+        threadTimer.start();
+
     }
 
     public synchronized void processMove(MovePieceRequest request) throws JsonProcessingException {
         System.out.println("Is game still going?:"+stillPlaying);
         if(!stillPlaying)
-            throw new GameOverException("This game is over!");
+            throw new GameOverException(ErrorMessage.GameOver.get());
         try {
             if(needsPromotionInfo)
                 throw new MovePieceException("Server can't respond to this request now!");
@@ -63,28 +75,28 @@ public class Lobby {
         }
         catch (GameOverException e){
             stillPlaying=false;
-            GameResult result=this.getGameOverResponse(e.getMessage());
-            throw new GameOverException(result.toString() );
+           threadTimer.interrupt();
+            throw new GameOverException(e.getMessage());
         }
 
 
     }
     public void processPromoteRequest(PromotePieceRequest request){
-        if(!needsPromotionInfo)
-            throw new RuntimeException("You can't promote!");
-        if(!Objects.equals(request.getIdPlayer(), currentPlayerId))
-            throw new RuntimeException("Wait your turn!");
-        moveValidator.promote(request);
-        needsPromotionInfo=false;
-        switchPlayer();
+//        try {
+            if (!needsPromotionInfo)
+                throw new RuntimeException("You can't promote!");
+            if (!Objects.equals(request.getIdPlayer(), currentPlayerId))
+                throw new RuntimeException("Wait your turn!");
+            moveValidator.promote(request);
+            needsPromotionInfo = false;
+            switchPlayer();
+//        }
+//        catch(GameOverException )
     }
     public GameResult forfeit(Long idPlayer){
+        threadTimer.interrupt();
         String message="Player resigned!";
-        GameResult gameResult;
-        if (Objects.equals(idPlayer, idPlayer1)) {
-            gameResult = new GameResult("Win", idPlayer2,message);
-        } else
-            gameResult = new GameResult("Win", idPlayer1,message);
+        GameResult gameResult=new GameResult("Win",message);
         System.out.println("Lobby fct: "+gameResult);
         stillPlaying=false;
        return gameResult;
@@ -93,6 +105,9 @@ public class Lobby {
     private void switchPlayer() {
         currentPlayerId = currentPlayerId.equals(idPlayer1) ? idPlayer2 : idPlayer1;
         System.out.println("Current player: " + currentPlayerId);
+        threadTimer.interrupt();
+        threadTimer=new Thread(timerMap.get(currentPlayerId));
+        threadTimer.start();
     }
 
     private boolean validateCoordinates(MovePieceRequest request) {
@@ -131,13 +146,6 @@ public class Lobby {
             return ChessMoveType.KnightMove;
         return ChessMoveType.WrongMove;
     }
-    public GameResult getGameOverResponse(String s){
-        String message="Chec";
-        if(s.contains("Win"))
-            return new GameResult("Win",currentPlayerId,"Check mate!");
-        else
-            return new GameResult("Draw",null,"Check mate!");
 
-    }
 
 }

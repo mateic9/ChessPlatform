@@ -25,4 +25,8 @@ public class WebSocketController {
         System.out.println(idPlayer);
         simpMessagingTemplate.convertAndSend("/game-over/" + idPlayer, jsonBody);
     }
+    public void sendGameOverMessage(Long idPlayer, Map<String,Object> jsonBody){
+        System.out.println("Pushing gameOver message!");
+        simpMessagingTemplate.convertAndSend("/game-over/" + idPlayer, jsonBody);
+    }
 }

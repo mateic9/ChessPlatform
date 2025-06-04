@@ -69,7 +69,7 @@ public class GamesManagerService {
 
         if (request.getIdPlayer().equals(idFirstPlayer)) {
             Long idGame = 5L;
-            lobbyToBeCreated = new Lobby(idGame, idFirstPlayer, idSecondPlayer, moveValidator);
+            lobbyToBeCreated = new Lobby(idGame, idFirstPlayer, idSecondPlayer, moveValidator,1);
             isGameCreated = true;
         }
 
