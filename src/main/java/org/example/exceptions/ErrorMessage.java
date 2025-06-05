@@ -1,7 +1,9 @@
 package org.example.exceptions;
 
 public enum ErrorMessage {
-    RunOutOfTime("Run out of time"),
+    RunOutOfTimeCurrentPlayer("You ran out of time"),
+    RunOutOfTimeOpponentPlayer("Opponent ran out of time"),
+
     CheckMate("Check mate!"),
     GameOver("The game is over"),
     Draw("It is a draw!");

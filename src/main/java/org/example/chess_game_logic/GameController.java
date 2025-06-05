@@ -9,10 +9,7 @@ import org.example.chess_game_logic.requests.ForfeitRequest;
 import org.example.chess_game_logic.requests.JoinGameRequest;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
-import org.example.exceptions.ErrorMessage;
-import org.example.exceptions.GameOverException;
-import org.example.exceptions.MovePieceException;
-import org.example.exceptions.PromInfoNeededException;
+import org.example.exceptions.*;
 import org.example.entities.User;
 import org.example.entities.UserRepo;
 import org.example.websocket.WebSocketController;
@@ -133,6 +130,15 @@ public class GameController {
            System.out.println("Json Proceed exception: "+e.getMessage());
            return   ResponseEntity.status(400).body(response);
        }
+       catch(RunOutOfTimeException e){
+           response.put("success",false);
+           response.put("message",e.getMessage());
+           sendOpponentGameOverMessage(request.getIdPlayer(), e.getMessage());
+           sendCurrentPlayerGameOverMessage(request.getIdPlayer(),e.getMessage());
+           System.out.println("Run out of time exception: "+e.getMessage());
+
+           return ResponseEntity.ok(response);
+       }
        catch(Exception e) {
            response.put("success",false);
            response.put("message",e.getMessage());
@@ -179,6 +185,8 @@ public class GameController {
             return ResponseEntity.ok(result.toJson());
         }
         catch(Exception e){
+
+            System.out.println(e.getMessage());
             Map<String,Object> body=new HashMap<String,Object>();
             body.put("succes",false);
             body.put("message",e.getMessage());
@@ -218,7 +226,7 @@ public class GameController {
     }
     private void sendCurrentPlayerGameOverMessage(Long playerId, String reason){
         GameResult gameResult;
-        if(reason.equals(ErrorMessage.RunOutOfTime.get()))
+        if(reason.equals(ErrorMessage.RunOutOfTimeCurrentPlayer.get()))
             gameResult=new GameResult("Loss",reason);
         else
         if(reason.equals(ErrorMessage.Draw.get()))
@@ -242,7 +250,7 @@ public class GameController {
                 ? lobby.getIdPlayer2()
                 : lobby.getIdPlayer1();
        GameResult gameResult;
-      if(reason.equals(ErrorMessage.RunOutOfTime.get()))
+      if(reason.equals(ErrorMessage.RunOutOfTimeOpponentPlayer.get()))
           gameResult=new GameResult("Win",reason);
       else
           if(reason.equals(ErrorMessage.Draw.get()))

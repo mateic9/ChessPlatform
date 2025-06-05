@@ -7,10 +7,9 @@ import org.example.chess_game_logic.chess_pieces.ChessMoveType;
 import org.example.chess_game_logic.chess_pieces.Color;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
-import org.example.exceptions.ErrorMessage;
-import org.example.exceptions.GameOverException;
-import org.example.exceptions.MovePieceException;
-import org.example.exceptions.PromInfoNeededException;
+import org.example.chess_game_logic.timer.TimerService;
+import org.example.exceptions.*;
+import org.example.websocket.WebSocketController;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,22 +28,21 @@ public class Lobby {
     private volatile boolean needsPromotionInfo=false;
     @Setter
     private volatile  boolean stillPlaying=true;
-    private Thread threadTimer;
-    Map<Long,Timer> timerMap=new HashMap<Long,Timer>();
-    public Lobby(Long idGame, Long idPlayer1, Long idPlayer2, MoveValidator moveValidator,int nrMinutes) {
+
+    private final TimerService timerService;
+    public Lobby(Long idGame, Long idPlayer1, Long idPlayer2, MoveValidator moveValidator, int nrMinutes, TimerService timerService) {
         this.idGame = idGame;
         this.idPlayer1 = idPlayer1;
         this.idPlayer2 = idPlayer2;
         this.moveValidator = moveValidator;
+        this.timerService = timerService;
         this.currentPlayerId = idPlayer1;
-        Timer timer1=new Timer(nrMinutes);
-        Timer timer2=new Timer(nrMinutes);
-        timerMap.put(idPlayer1,timer1);
-        timerMap.put(idPlayer2,timer2);
-        threadTimer=new Thread(timerMap.get(idPlayer1));
-        threadTimer.start();
 
+        timerService.startTimer(idPlayer1, nrMinutes * 60, () -> onTimeout(idPlayer1));
+        timerService.startTimer(idPlayer2, nrMinutes * 60, () -> onTimeout(idPlayer2));
+        timerService.pauseTimer(idPlayer2);
     }
+
 
     public synchronized void processMove(MovePieceRequest request) throws JsonProcessingException {
         System.out.println("Is game still going?:"+stillPlaying);
@@ -75,8 +73,14 @@ public class Lobby {
         }
         catch (GameOverException e){
             stillPlaying=false;
-           threadTimer.interrupt();
+            timerService.stopTimer(idPlayer1);
+            timerService.stopTimer(idPlayer2);
             throw new GameOverException(e.getMessage());
+        }
+        catch(RunOutOfTimeException e){
+            stillPlaying=false;
+            System.out.println("Caught RunOutOfTIme exc:"+e.getMessage());
+            throw e;
         }
 
 
@@ -93,21 +97,26 @@ public class Lobby {
 //        }
 //        catch(GameOverException )
     }
-    public GameResult forfeit(Long idPlayer){
-        threadTimer.interrupt();
-        String message="Player resigned!";
-        GameResult gameResult=new GameResult("Win",message);
-        System.out.println("Lobby fct: "+gameResult);
-        stillPlaying=false;
-       return gameResult;
+    public GameResult forfeit(Long idPlayer) throws Exception {
+
+           if(!stillPlaying)
+               throw new  Exception(ErrorMessage.GameOver.get());
+            timerService.stopTimer(idPlayer1);
+            timerService.stopTimer(idPlayer2);
+            String message = "Player resigned!";
+            GameResult gameResult = new GameResult("Win", message);
+            System.out.println("Lobby fct: " + gameResult);
+            stillPlaying = false;
+
+            return gameResult;
 
     }
     private void switchPlayer() {
-        currentPlayerId = currentPlayerId.equals(idPlayer1) ? idPlayer2 : idPlayer1;
+        Long otherPlayer = currentPlayerId.equals(idPlayer1) ? idPlayer2 : idPlayer1;
+        timerService.pauseTimer(currentPlayerId);
+        currentPlayerId = otherPlayer;
+        timerService.resumeTimer(currentPlayerId);
         System.out.println("Current player: " + currentPlayerId);
-        threadTimer.interrupt();
-        threadTimer=new Thread(timerMap.get(currentPlayerId));
-        threadTimer.start();
     }
 
     private boolean validateCoordinates(MovePieceRequest request) {
@@ -146,6 +155,32 @@ public class Lobby {
             return ChessMoveType.KnightMove;
         return ChessMoveType.WrongMove;
     }
+
+    private void onTimeout(Long playerId) {
+        if (!stillPlaying) return;
+
+        stillPlaying = false;
+        timerService.stopTimer(idPlayer1);
+        timerService.stopTimer(idPlayer2);
+
+        String message = "Player " + playerId + " ran out of time!";
+        GameResult result = new GameResult("Win", message);
+
+        // Notify both players
+        Long opponent = playerId.equals(idPlayer1) ? idPlayer2 : idPlayer1;
+        System.out.println("TIMEOUT: " + message);
+        WebSocketController controller = timerService.getWebSocketController(); // or inject directly
+
+        controller.sendGameOverMessage(opponent, Map.of(
+                "matchResult", "Win",
+                "reason", ErrorMessage.RunOutOfTimeOpponentPlayer.get()
+        ));
+        controller.sendGameOverMessage(playerId, Map.of(
+                "matchResult", "Lose",
+                "reason", ErrorMessage.RunOutOfTimeCurrentPlayer.get()
+        ));
+    }
+
 
 
 }
