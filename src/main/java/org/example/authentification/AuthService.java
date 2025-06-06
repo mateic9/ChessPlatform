@@ -9,15 +9,15 @@ import org.example.entities.User;
 import org.example.entities.UserRepo;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+
 @Service
 public class AuthService implements AuthServiceInterface {
     @Getter
     private UserRepo userRepo;
     @Getter
    private Map<Long,Integer> userAddressMap =new HashMap<Long,Integer>();
+    private List<Long> loggedUsers=new ArrayList<Long>();
 //    private final SocketRegistry socketRegistry;
     AuthService(UserRepo userRepo){
         this.userRepo=userRepo;
@@ -41,9 +41,14 @@ public class AuthService implements AuthServiceInterface {
           long idPlayer= userOpt.get().getId();
 //          userAddressMap.put(idPlayer, request.getPort());
 //          socketRegistry.add(idPlayer, new WebSocketSession());
+          loggedUsers.add(idPlayer);
           return idPlayer;
 
     }
+    public boolean isUserLogged(Long idPlayer){
+        return loggedUsers.contains(idPlayer);
+    }
+
 
 
 
