@@ -27,10 +27,11 @@ public class GamesManagerService {
     private volatile Long idFirstPlayer = -1L;
     private volatile Long idSecondPlayer = -1L;
     private volatile Lobby lobbyToBeCreated = null;
-
-    public GamesManagerService(MoveValidator moveValidator, LobbyFactory lobbyFactory) {
+    private final GameIdManager gameIdManager;
+    public GamesManagerService(MoveValidator moveValidator, LobbyFactory lobbyFactory,GameIdManager gameIdManager) {
         this.moveValidator = moveValidator;
         this.lobbyFactory = lobbyFactory;
+        this.gameIdManager=gameIdManager;
     }
 
     public void processMove(MovePieceRequest request) throws MovePieceException, JsonProcessingException {
@@ -70,13 +71,12 @@ public class GamesManagerService {
         }
 
         if (request.getIdPlayer().equals(idFirstPlayer)) {
-            Long idGame = System.currentTimeMillis(); // better than hardcoded 5L
+            Long idGame = gameIdManager.getId();
             lobbyToBeCreated = lobbyFactory.createLobby(idGame, idFirstPlayer, idSecondPlayer, moveValidator, 1);
             isGameCreated = true;
         }
 
         while (!isGameCreated) {
-            // Wait for game to be created
         }
 
         System.out.println("Game with id: " + lobbyToBeCreated.getIdGame() + " was created");

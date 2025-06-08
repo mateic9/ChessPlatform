@@ -32,6 +32,7 @@ public class GameController {
     private final GamesManagerService gameManager;
     private final AuthService authService;
     private final UserRepo userRepo;
+
     @Autowired
     private WebSocketController wsCont;
 

@@ -18,7 +18,7 @@ public class WebSocketV2 implements WebSocketMessageBrokerConfigurer {
    }
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
-        registry.enableSimpleBroker("/board", "/game-over","/time");
+        registry.enableSimpleBroker("/board", "/game-over","/time","/practice");
         registry.setApplicationDestinationPrefixes("/app");
     }
 }

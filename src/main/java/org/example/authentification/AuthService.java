@@ -48,8 +48,25 @@ public class AuthService implements AuthServiceInterface {
     public boolean isUserLogged(Long idPlayer){
         return loggedUsers.contains(idPlayer);
     }
+    public void checkRecoveryAccountCredentials(RecoverAccountAccessRequest request) throws Exception {
+         Optional<User> optUser=userRepo.findByUsername(request.getUsername());
+         if(optUser.isEmpty())
+             throw new Exception("No username with this name!");
+         if(!optUser.get().getGmail().equals(request.getEmail())){
+             throw new Exception("Credentials don't match");
+         }
 
 
+
+
+    }
+
+  public void changePassword(ChangePasswordRequest request) throws Exception {
+      Optional<User> optUser = userRepo.findByUsername(request.getUsername());
+      if (optUser.isEmpty())
+          throw new Exception("No username with this name!");
+       optUser.get().setEnc_password(request.getNewPassword());
+  }
 
 
 }

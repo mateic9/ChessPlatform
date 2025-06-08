@@ -22,6 +22,7 @@ public class User {
     private String username;
 
     @Email(message = "Invalid email format")
+    @Column(unique=true)
     private  String gmail;
     private String enc_password;
 }
