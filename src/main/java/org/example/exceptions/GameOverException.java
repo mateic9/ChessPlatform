@@ -12,5 +12,8 @@ public class GameOverException extends RuntimeException{
     public GameOverException(String message, GameResult result){
         this.gameResult=result;
     }
+    public String toString(){
+        return "GameOver Exc: "+this.getMessage();
+    }
 }
 

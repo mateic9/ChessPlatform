@@ -3,6 +3,7 @@ package org.example.practice;
 import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.github.bhlangonijr.chesslib.move.MoveGenerator;
+import lombok.Getter;
 import org.example.websocket.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class PracticeService {
 
+    @Getter
     private final Map<Integer, PracticeGame> games = new ConcurrentHashMap<Integer,PracticeGame>();
     private final AtomicInteger idGenerator = new AtomicInteger();
     @Autowired
@@ -26,11 +28,15 @@ public class PracticeService {
     public PracticeGame handlePlayerMove(MoveRequest req) throws InvalidMoveException {
         PracticeGame game = games.get(req.getUserId());
         if (game == null) throw new IllegalArgumentException("Game not found.");
-
-        String newFen = chessEngine.makeMove(game.getFen(), req.getFrom(), req.getTo());
+        System.out.println("check move");
+        System.out.println("from "+req.getFrom()+" to "+req.getTo());
+        String newFen = chessEngine.makeMove(game.getFen(), req.getFrom().toUpperCase(), req.getTo().toUpperCase(),PlayerType.Human);
+        System.out.println("after checking move");
         game.applyMove(req.getFrom(), req.getTo(), newFen);
-        sendFenToClient(game);
+        chessEngine.checkIsGameOver(game.getFen(),PlayerType.Human);
+//        sendFenToClient(game);
         triggerAiMove(game);
+        chessEngine.checkIsGameOver(game.getFen(),PlayerType.AI);
         return game;
     }
 
@@ -46,7 +52,7 @@ public class PracticeService {
 
     private void sendFenToClient(PracticeGame game) {
         String fen = game.getFen();
-       wsCont.sendFenToUser(game.getUserId(), fen, game.isPlayerTurn());
+//       wsCont.sendFenToUser(game.getUserId(), fen, game.isPlayerTurn());
     }
 
     private void triggerAiMove(PracticeGame game) {
@@ -64,7 +70,8 @@ public class PracticeService {
 
             // Pick random move
             Move aiMove = legalMoves.get(new Random().nextInt(legalMoves.size()));
-
+            String from= String.valueOf(aiMove.getFrom().getFile());
+            System.out.println(from);
             // Apply the move
             board.doMove(aiMove);
 
@@ -73,10 +80,12 @@ public class PracticeService {
             game.applyMove(aiMove.getFrom().toString(), aiMove.getTo().toString(), newFen);
 
             // Send updated board to client
-            sendFenToClient(game);
+//            sendFenToClient(game);
 
         } catch (Exception e) {
             e.printStackTrace(); // Log error for debugging
         }
     }
+
+
 }

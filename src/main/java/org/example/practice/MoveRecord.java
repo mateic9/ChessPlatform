@@ -1,5 +1,8 @@
 package org.example.practice;
 
+import lombok.Getter;
+
+@Getter
 public class MoveRecord {
     private String from;
     private String to;

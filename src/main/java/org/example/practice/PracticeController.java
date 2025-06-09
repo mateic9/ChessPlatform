@@ -1,10 +1,12 @@
 package org.example.practice;
 
+import org.example.exceptions.GameOverException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -19,7 +21,10 @@ public class PracticeController {
     public ResponseEntity<?> initGame(@RequestBody GameInitRequest request) {
         try {
             PracticeGame game = practiceService.initializeGame(request);
-            return ResponseEntity.ok().body(Map.of("in_practice_id", game.getUserId()));
+            Map<String,Object> jsonBody=new HashMap<String,Object>();
+            jsonBody.put("in_practice_id",game.getUserId());
+            jsonBody.put("fen",game.getFen());
+            return ResponseEntity.ok().body(jsonBody);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
@@ -29,10 +34,24 @@ public class PracticeController {
 
     @PostMapping("/make_move")
     public ResponseEntity<?> makeMove(@RequestBody MoveRequest request) {
+        Map<String,Object> jsonBody=new HashMap<String,Object>();
         try {
+
             PracticeGame updatedGame = practiceService.handlePlayerMove(request);
-            return ResponseEntity.ok().body(Map.of("message", "Move processed."));
-        } catch (InvalidMoveException e) {
+            jsonBody.put("message","Move proceeded");
+            jsonBody.put("fen",updatedGame.getFen());
+            System.out.println("fen: "+updatedGame.getFen());
+            return ResponseEntity.ok(jsonBody);
+
+        }catch (GameOverException exc) {
+            System.out.println(exc);
+            PracticeGame game=practiceService.getGames().get(request.getUserId());
+            jsonBody.put("message",exc.getMessage());
+            jsonBody.put("fen",game.getFen());
+            return  ResponseEntity.status(201).body(jsonBody);
+
+        }
+        catch (InvalidMoveException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Move handling failed."));
