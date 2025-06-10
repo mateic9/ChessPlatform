@@ -1,6 +1,10 @@
 package org.example.practice;
 
 import org.example.exceptions.GameOverException;
+import org.example.practice.requests.GameInitRequest;
+import org.example.practice.requests.MoveRequest;
+import org.example.practice.requests.UndoMoveRequest;
+import org.example.practice.requests.NextMoveRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +59,36 @@ public class PracticeController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Move handling failed."));
+        }
+    }
+    @PostMapping("/undo_move")
+    public ResponseEntity<?> undoMove(@RequestBody UndoMoveRequest request){
+        Map<String,Object> jsonBody=new HashMap<String,Object>();
+        try{
+            PracticeGame game=practiceService.undoMove(request);
+            jsonBody.put("message","Move undone");
+            jsonBody.put("fen",game.getFen());
+            return ResponseEntity.ok(jsonBody);
+        }
+
+        catch (Exception e){
+            jsonBody.put("message",e.getMessage());
+            return ResponseEntity.status(400).body(jsonBody);
+        }
+    }
+    @PostMapping("/next_move")
+    public ResponseEntity<?> nextMove(@RequestBody NextMoveRequest request){
+        Map<String,Object> jsonBody=new HashMap<String,Object>();
+        try{
+            PracticeGame game=practiceService.nextMove(request);
+            jsonBody.put("message","Move retrieved");
+            jsonBody.put("fen",game.getFen());
+            return ResponseEntity.ok(jsonBody);
+        }
+
+        catch (Exception e){
+            jsonBody.put("message",e.getMessage());
+            return ResponseEntity.status(400).body(jsonBody);
         }
     }
 }

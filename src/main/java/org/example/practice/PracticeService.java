@@ -4,6 +4,10 @@ import com.github.bhlangonijr.chesslib.Board;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.github.bhlangonijr.chesslib.move.MoveGenerator;
 import lombok.Getter;
+import org.example.practice.requests.GameInitRequest;
+import org.example.practice.requests.MoveRequest;
+import org.example.practice.requests.NextMoveRequest;
+import org.example.practice.requests.UndoMoveRequest;
 import org.example.websocket.WebSocketController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,13 +44,33 @@ public class PracticeService {
         return game;
     }
 
-    public PracticeGame initializeGame(GameInitRequest request) {
+    public PracticeGame initializeGame(GameInitRequest request) throws Exception{
+        String color=request.getColor();
+        if(!color.equals("WHITE")&&!color.equals("BLACK"))
+            throw new Exception("Problem with color parameter");
         int userId = idGenerator.incrementAndGet();
         PracticeGame game = new PracticeGame(userId, request.getFen(), request.getColor(), request.getDifficulty());
         games.put(userId, game);
-        sendFenToClient(game);
+//        sendFenToClient(game);
+        System.out.println(color);
+        if(color.equals("BLACK"))
+            triggerAiMove(game);
         return game;
     }
+    public PracticeGame undoMove(UndoMoveRequest request) throws Exception {
+        PracticeGame game = games.get(request.getUserId());
+        if (game == null) throw new IllegalArgumentException("Game not found.");
+        game.undoLastMove();
+        return game;
+    }
+
+    public PracticeGame nextMove(NextMoveRequest request) throws Exception {
+        PracticeGame game = games.get(request.getUserId());
+        if (game == null) throw new IllegalArgumentException("Game not found.");
+        game.nextMove();
+        return game;
+    }
+
 
 
 

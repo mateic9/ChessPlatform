@@ -25,11 +25,47 @@ public class PracticeGame {
     }
 
     public void applyMove(String from, String to, String updatedFen) {
-        history.add(new MoveRecord(from, to, this.fen));
+        // If we're in the middle of history, discard future moves
+        if (curFenIdx < history.size()) {
+            history.subList(curFenIdx, history.size()).clear();
+        }
+
+        history.add(new MoveRecord(from, to, this.fen, updatedFen));
         this.fen = updatedFen;
         this.playerTurn = !playerTurn;
         curFenIdx++;
     }
+
+    public void undoLastMove() throws Exception {
+        if (curFenIdx < 2)
+            throw new Exception("No move to undo");
+
+        curFenIdx -= 2;
+        MoveRecord previous = history.get(curFenIdx);
+        this.fen = previous.getFenBeforeMove();
+        this.playerTurn = "white".equalsIgnoreCase(this.playerColor) == (curFenIdx % 2 == 0);
+    }
+
+    public void nextMove() throws Exception {
+        if (curFenIdx + 1 >= history.size())
+            throw new Exception("No next move available");
+
+        // MoveRecord at [curFenIdx] is the next half-move (player or AI)
+        MoveRecord next = history.get(curFenIdx);
+        this.fen = next.getFenAfterMove();
+        curFenIdx++;
+
+        // Apply second half-move if exists (player+AI as a pair)
+        if (curFenIdx < history.size()) {
+            MoveRecord second = history.get(curFenIdx);
+            this.fen = second.getFenAfterMove();
+            curFenIdx++;
+        }
+
+        this.playerTurn = "white".equalsIgnoreCase(this.playerColor) == (curFenIdx % 2 == 0);
+    }
+
+
 
 
 
