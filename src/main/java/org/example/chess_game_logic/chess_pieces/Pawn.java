@@ -81,8 +81,10 @@ public class Pawn implements PieceInterface {
         return (color == Color.White) ? "P" : "p";
     }
     public boolean canPromote(Position destPosition){
-        if(color==Color.White&&destPosition.getX()==7)
+        if(color==Color.White&&destPosition.getX()==7){
+            System.out.println("white piece must be promoted");
             return true;
+        }
         return color == Color.Black && destPosition.getX() == 0;
     }
 }

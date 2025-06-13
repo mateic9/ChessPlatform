@@ -18,6 +18,14 @@ public class Board {
     private final PieceInterface[][] board = new PieceInterface[8][8];
     @Getter
     private Map<Color, Position> kingPozMap=new HashMap<>();
+    @Getter
+    private String enPassantTarget = "-";
+
+    @Getter
+    private int halfmoveClock = 0;
+
+    @Getter
+    private int fullmoveNumber = 1;
     public Board() {
         initializeBoard(); // optional: set up initial chess positions
     }
@@ -49,14 +57,52 @@ public class Board {
         return (0<=p.getX()&&p.getX()<=7&&0<=p.getY()&&p.getY()<=7);
     }
     private void initializeBoard() {
-        Position kingWhitePos=new Position(5,1);
-        Position kingBlackPos=new Position(7,0);
-       this.setPieceAt(kingWhitePos,new King(Color.White));
-       this.setPieceAt(kingBlackPos,new King(Color.Black));
-       this.setPieceAt(new Position(6,5),new Queen(Color.White));
-       this.setPieceAt(new Position(6,6),new Rook(Color.Black));
+        Position kingWhitePos=new Position(7,4);
+        Position kingBlackPos=new Position(0,4);
         kingPozMap.put(Color.White,kingWhitePos);
         kingPozMap.put(Color.Black,kingBlackPos);
+
+        this.setPieceAt(new Position(7,0),new Rook(Color.White));
+        this.setPieceAt(new Position(7,1),new Knight(Color.White));
+        this.setPieceAt(new Position(7,2),new Bishop(Color.White));
+        this.setPieceAt(new Position(7,3),new Queen(Color.White));
+        this.setPieceAt(new Position(7,4),new King(Color.White));
+        this.setPieceAt(new Position(7,5),new Bishop(Color.White));
+        this.setPieceAt(new Position(7,6),new Knight(Color.White));
+        this.setPieceAt(new Position(7,7),new Rook(Color.White));
+
+        ///white pawns init
+        this.setPieceAt(new Position(6,0),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,1),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,2),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,3),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,4),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,5),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,6),new Pawn(Color.White));
+        this.setPieceAt(new Position(6,7),new Pawn(Color.White));
+
+
+        ///black pieces
+        this.setPieceAt(new Position(0,0),new Rook(Color.Black));
+        this.setPieceAt(new Position(0,1),new Knight(Color.Black));
+        this.setPieceAt(new Position(0,2),new Bishop(Color.Black));
+        this.setPieceAt(new Position(0,3),new Queen(Color.Black));
+        this.setPieceAt(new Position(0,4),new King(Color.Black));
+        this.setPieceAt(new Position(0,5),new Bishop(Color.Black));
+        this.setPieceAt(new Position(0,6),new Knight(Color.Black));
+        this.setPieceAt(new Position(0,7),new Rook(Color.Black));
+
+
+        ///black pawns
+
+        this.setPieceAt(new Position(1,0),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,1),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,2),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,3),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,4),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,5),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,6),new Pawn(Color.Black));
+        this.setPieceAt(new Position(1,7),new Pawn(Color.Black));
     }
     public void printBoard(){
         int i,j;
@@ -144,7 +190,7 @@ public class Board {
                 }
           return piecesLeft;
     }
-    public String getFen(){
+    public String getPiecePositionFen(){
         StringBuilder fenReprez= new StringBuilder();
         StringBuilder row;
         int i,j,emptySpaces;
@@ -169,6 +215,135 @@ public class Board {
 
         return fenReprez.toString();
     }
+
+//    public String getRealFen(Color colorToMove) {
+//        StringBuilder fen = new StringBuilder();
+//
+//        // 1. Piece positions
+//        fen.append(getPiecePositionFen()).append(" ");
+//
+//        // 2. Active color
+//        fen.append(colorToMove == Color.White ? "w" : "b").append(" ");
+//
+//        // 3. Castling rights
+//        StringBuilder castling = new StringBuilder();
+//
+//        // White king and rooks
+//        Position whiteKingPos = kingPozMap.get(Color.White);
+//        PieceInterface whiteKing = getPieceAt(whiteKingPos);
+//        if (whiteKing instanceof King && !((King) whiteKing).isMoved()) {
+//            PieceInterface whiteKingsideRook = getPieceAt(new Position(0, 7));
+//            if (whiteKingsideRook instanceof Rook && !((Rook) whiteKingsideRook).isMoved()) {
+//                castling.append("K");
+//            }
+//            PieceInterface whiteQueensideRook = getPieceAt(new Position(0, 0));
+//            if (whiteQueensideRook instanceof Rook && !((Rook) whiteQueensideRook).isMoved()) {
+//                castling.append("Q");
+//            }
+//        }
+//
+//        // Black king and rooks
+//        Position blackKingPos = kingPozMap.get(Color.Black);
+//        PieceInterface blackKing = getPieceAt(blackKingPos);
+//        if (blackKing instanceof King && !((King) blackKing).isMoved()) {
+//            PieceInterface blackKingsideRook = getPieceAt(new Position(7, 7));
+//            if (blackKingsideRook instanceof Rook && !((Rook) blackKingsideRook).isMoved()) {
+//                castling.append("k");
+//            }
+//            PieceInterface blackQueensideRook = getPieceAt(new Position(7, 0));
+//            if (blackQueensideRook instanceof Rook && !((Rook) blackQueensideRook).isMoved()) {
+//                castling.append("q");
+//            }
+//        }
+//
+//        fen.append(castling.length() > 0 ? castling : "-").append(" ");
+//
+//
+//        fen.append("- ");
+//
+//
+//        fen.append("0 ");
+//
+//
+//        fen.append("1");
+//
+//        return fen.toString();
+//    }
+public String getRealFen(Color colorToMove) {
+    StringBuilder fen = new StringBuilder();
+
+    // 1. Piece positions
+    fen.append(getPiecePositionFen()).append(" ");
+
+    // 2. Active color
+    fen.append(colorToMove == Color.White ? "w" : "b").append(" ");
+
+    // 3. Castling rights
+    StringBuilder castling = new StringBuilder();
+
+    Position whiteKingPos = kingPozMap.get(Color.White);
+    PieceInterface whiteKing = getPieceAt(whiteKingPos);
+    if (whiteKing instanceof King && !((King) whiteKing).isMoved()) {
+        PieceInterface whiteKingsideRook = getPieceAt(new Position(0, 7));
+        if (whiteKingsideRook instanceof Rook && !((Rook) whiteKingsideRook).isMoved()) castling.append("K");
+        PieceInterface whiteQueensideRook = getPieceAt(new Position(0, 0));
+        if (whiteQueensideRook instanceof Rook && !((Rook) whiteQueensideRook).isMoved()) castling.append("Q");
+    }
+
+    Position blackKingPos = kingPozMap.get(Color.Black);
+    PieceInterface blackKing = getPieceAt(blackKingPos);
+    if (blackKing instanceof King && !((King) blackKing).isMoved()) {
+        PieceInterface blackKingsideRook = getPieceAt(new Position(7, 7));
+        if (blackKingsideRook instanceof Rook && !((Rook) blackKingsideRook).isMoved()) castling.append("k");
+        PieceInterface blackQueensideRook = getPieceAt(new Position(7, 0));
+        if (blackQueensideRook instanceof Rook && !((Rook) blackQueensideRook).isMoved()) castling.append("q");
+    }
+
+    fen.append(castling.length() > 0 ? castling.toString() : "-").append(" ");
+
+    // 4. En passant
+    fen.append(enPassantTarget != null ? enPassantTarget : "-").append(" ");
+
+    // 5. Halfmove clock
+    fen.append(halfmoveClock).append(" ");
+
+    // 6. Fullmove number
+    fen.append(fullmoveNumber);
+
+    return fen.toString();
+}
+
+
+    public void registerActualMove(Position from, Position to, Color color, boolean isCapture) {
+        PieceInterface piece = getPieceAt(to); // After movePiece() has been called
+
+        // Reset en passant by default
+        enPassantTarget = "-";
+
+        // Update en passant if pawn moved two squares
+        if (piece instanceof Pawn) {
+            int dx = Math.abs(from.getX() - to.getX());
+            if (dx == 2) {
+                int middleX = (from.getX() + to.getX()) / 2;
+                char file = (char) ('a' + from.getY());
+                int rank = 8 - middleX;
+                enPassantTarget = file + String.valueOf(rank);
+            }
+            halfmoveClock = 0;
+        } else if (isCapture) {
+            halfmoveClock = 0;
+        } else {
+            halfmoveClock++;
+        }
+
+        if (color == Color.Black) {
+            fullmoveNumber++;
+        }
+    }
+
+
+
+
 
 
 }

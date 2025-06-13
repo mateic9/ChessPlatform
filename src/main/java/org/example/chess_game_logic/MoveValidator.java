@@ -2,6 +2,7 @@ package org.example.chess_game_logic;
 
 import lombok.Getter;
 import org.example.chess_game_logic.chess_pieces.*;
+import org.example.chess_game_logic.entities.ChessMove;
 import org.example.chess_game_logic.requests.MovePieceRequest;
 import org.example.chess_game_logic.requests.PromotePieceRequest;
 import org.example.exceptions.ErrorMessage;
@@ -65,14 +66,20 @@ public class MoveValidator {
       if(!this.isKingSafe(curPosition,destPosition,board,playerColor))
           throw new MovePieceException("King "+playerColor+" is in check!" );
       board.movePiece(curPosition,destPosition);
-      System.out.println();
-      System.out.println("Board config:");
-      board.printBoard();
+      boolean isCapture = board.getPieceAt(destPosition) != null;
+      board.registerActualMove(curPosition, destPosition, playerColor, isCapture);
+
+//      System.out.println();
+//      System.out.println("Board config:");
+//      board.printBoard();
 
       if(piece instanceof Pawn){
-          if(((Pawn)piece).canPromote(destPosition))
-              promotePos=destPosition;
+          if(((Pawn)piece).canPromote(destPosition)) {
+              System.out.println("Waiting for promotion choice!");
+              System.out.println("Poz destinatie: " + destPosition);
+              promotePos = destPosition;
               throw new PromInfoNeededException("Alege cu ce piesa vrei sa promovezi!");
+          }
       }
       if(this.isGameOver(playerColor,board)) {
           System.out.println("GAME OVER!");
@@ -80,8 +87,9 @@ public class MoveValidator {
           board.printBoard();
           throw new GameOverException(ErrorMessage.CheckMate.get());
       }
-      System.out.println("The game isn't over");
-      System.out.println("Board config:");
+//      System.out.println("The game isn't over");
+//      System.out.println("Board config:");
+      System.out.println(board.getRealFen(playerColor));
       board.printBoard();
     }
 //    private boolean isKingSafe(Position curPosition, Position destPosition, Board board, Color playerColor) {

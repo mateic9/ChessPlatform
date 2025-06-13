@@ -43,15 +43,21 @@ public class PracticeController {
 
             PracticeGame updatedGame = practiceService.handlePlayerMove(request);
             jsonBody.put("message","Move proceeded");
-            jsonBody.put("fen",updatedGame.getFen());
+            int idx= updatedGame.getCurFenIdx();
+            MoveRecord lastMove=updatedGame.getHistory().get(idx);
+            jsonBody.put("fen1",lastMove.getFenBeforeMove());
+            jsonBody.put("fen2", lastMove.getFenAfterMove());
             System.out.println("fen: "+updatedGame.getFen());
             return ResponseEntity.ok(jsonBody);
 
         }catch (GameOverException exc) {
             System.out.println(exc);
-            PracticeGame game=practiceService.getGames().get(request.getUserId());
+            PracticeGame updatedGame=practiceService.getGames().get(request.getUserId());
+            int idx= updatedGame.getCurFenIdx();
+            MoveRecord lastMove=updatedGame.getHistory().get(idx);
             jsonBody.put("message",exc.getMessage());
-            jsonBody.put("fen",game.getFen());
+            jsonBody.put("fen1",lastMove.getFenBeforeMove());
+            jsonBody.put("fen2",lastMove.getFenAfterMove());
             return  ResponseEntity.status(201).body(jsonBody);
 
         }
@@ -61,28 +67,74 @@ public class PracticeController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Move handling failed."));
         }
     }
-    @PostMapping("/undo_move")
-    public ResponseEntity<?> undoMove(@RequestBody UndoMoveRequest request){
-        Map<String,Object> jsonBody=new HashMap<String,Object>();
-        try{
-            PracticeGame game=practiceService.undoMove(request);
-            jsonBody.put("message","Move undone");
-            jsonBody.put("fen",game.getFen());
-            return ResponseEntity.ok(jsonBody);
+//    @PostMapping("/undo_move")
+//    public ResponseEntity<?> undoMove(@RequestBody UndoMoveRequest request){
+//        Map<String,Object> jsonBody=new HashMap<String,Object>();
+//        try{
+//            PracticeGame updatedGame=practiceService.undoMove(request);
+//            int idx= updatedGame.getCurFenIdx()+1;
+//            MoveRecord lastMove=updatedGame.getHistory().get(idx);
+//            jsonBody.put("message","Move undone");
+////            jsonBody.put("fen",game.getFen());
+//
+//            jsonBody.put("message","Move retrieved");
+////            jsonBody.put("fen",game.getFen());
+//            jsonBody.put("fen1",lastMove.getFenAfterMove());
+//            jsonBody.put("fen2",lastMove.getFenBeforeMove());
+//            return ResponseEntity.ok(jsonBody);
+//        }
+//
+//        catch (Exception e){
+//            jsonBody.put("message",e.getMessage());
+//            return ResponseEntity.status(400).body(jsonBody);
+//        }
+//    }
+@PostMapping("/undo_move")
+public ResponseEntity<?> undoMove(@RequestBody UndoMoveRequest request) {
+    Map<String, Object> jsonBody = new HashMap<>();
+    try {
+        PracticeGame updatedGame = practiceService.undoMove(request);
+
+        // After undoLastMove(), curFenIdx points to the position we're now at
+        // For the animation, we want to show moving from where we were back to where we are now
+        int currentIdx = updatedGame.getCurFenIdx();
+
+        // The move we undid should be at currentIdx + 2 (since we went back 2 positions)
+        int undonePlayerMoveIdx = currentIdx + 2;
+        int undoneAiMoveIdx = currentIdx + 1;
+
+        if (undonePlayerMoveIdx < updatedGame.getHistory().size()) {
+            // Show the undo animation: from the undone position back to current position
+            MoveRecord undonePlayerMove = updatedGame.getHistory().get(undonePlayerMoveIdx);
+
+            // fen1: position after the moves that were undone
+            // fen2: current position (before those moves)
+            jsonBody.put("message", "Move undone");
+            jsonBody.put("fen1", undonePlayerMove.getFenAfterMove()); // Where we were
+            jsonBody.put("fen2", updatedGame.getFen()); // Where we are now
+        } else {
+            jsonBody.put("message", "Move undone");
+            jsonBody.put("fen1", updatedGame.getFen());
+            jsonBody.put("fen2", updatedGame.getFen());
         }
 
-        catch (Exception e){
-            jsonBody.put("message",e.getMessage());
-            return ResponseEntity.status(400).body(jsonBody);
-        }
+        return ResponseEntity.ok(jsonBody);
+    } catch (Exception e) {
+        jsonBody.put("message", e.getMessage());
+        return ResponseEntity.status(400).body(jsonBody);
     }
+}
     @PostMapping("/next_move")
     public ResponseEntity<?> nextMove(@RequestBody NextMoveRequest request){
         Map<String,Object> jsonBody=new HashMap<String,Object>();
         try{
-            PracticeGame game=practiceService.nextMove(request);
+            PracticeGame updatedGame=practiceService.nextMove(request);
+            int idx= updatedGame.getCurFenIdx();
+            MoveRecord lastMove=updatedGame.getHistory().get(idx);
             jsonBody.put("message","Move retrieved");
-            jsonBody.put("fen",game.getFen());
+//            jsonBody.put("fen",game.getFen());
+            jsonBody.put("fen1",lastMove.getFenBeforeMove());
+            jsonBody.put("fen2",lastMove.getFenAfterMove());
             return ResponseEntity.ok(jsonBody);
         }
 

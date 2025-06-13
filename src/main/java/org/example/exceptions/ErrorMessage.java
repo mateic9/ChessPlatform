@@ -6,7 +6,8 @@ public enum ErrorMessage {
 
     CheckMate("Check mate!"),
     GameOver("The game is over"),
-    Draw("It is a draw!");
+    Draw("It is a draw!"),
+    Forfeit("the player resigned");
     private final String message;
 
     ErrorMessage(String message) {

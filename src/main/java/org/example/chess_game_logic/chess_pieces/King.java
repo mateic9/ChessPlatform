@@ -156,7 +156,7 @@ public class King implements PieceInterface {
                     if (piece != null) {
                         if (piece.getColor() != color &&
                                 piece.canCapture(pos, kingPos, dir, board)) {
-                            System.out.println(piece + "attacks "+this);
+//                            System.out.println(piece + "attacks "+this);
                             response.put(pos,dir);
                         } else {
                             break;  // blocked by own piece or wrong opponent piece
@@ -167,8 +167,8 @@ public class King implements PieceInterface {
                 }
             }
         }
-        System.out.println("First king check "+board.getKingPozMap().get(color));
-       System.out.println("all checks made!");
+//        System.out.println("First king check "+board.getKingPozMap().get(color));
+//       System.out.println("all checks made!");
         // Add knight check
         int[][] knightMoves = {
                 {-2, -1}, {-2, 1}, {-1, -2}, {-1, 2},
@@ -183,7 +183,7 @@ public class King implements PieceInterface {
                 }
             }
         }
-        System.out.println("After knight check: "+board.getKingPozMap().get(color));
+//        System.out.println("After knight check: "+board.getKingPozMap().get(color));
 //
 //        // Add pawn check (simplified logic, assuming white moves up and black moves down)
 //        int pawnDir = (color == Color.WHITE) ? -1 : 1;

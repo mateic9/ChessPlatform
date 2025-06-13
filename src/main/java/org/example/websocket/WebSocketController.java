@@ -31,11 +31,11 @@ public class WebSocketController {
         simpMessagingTemplate.convertAndSend("/game-over/" + idPlayer, jsonBody);
     }
     public void sendGameOverMessage(Long idPlayer, Map<String,Object> jsonBody){
-        System.out.println("Pushing gameOver message!");
+//        System.out.println("Pushing gameOver message!");
         simpMessagingTemplate.convertAndSend("/game-over/" + idPlayer, jsonBody);
     }
     public void sendTime(Long idPlayer,int secondsLeft){
-        System.out.println("Pushing Time message!: "+secondsLeft);
+//        System.out.println("Pushing Time message!: "+secondsLeft);
         Map<String,Object> jsonBody=new HashMap<String,Object>();
         jsonBody.put("timeLeft",secondsLeft);
         simpMessagingTemplate.convertAndSend("/time/" + idPlayer, jsonBody);

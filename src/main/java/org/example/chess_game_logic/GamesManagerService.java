@@ -27,11 +27,11 @@ public class GamesManagerService {
     private volatile Long idFirstPlayer = -1L;
     private volatile Long idSecondPlayer = -1L;
     private volatile Lobby lobbyToBeCreated = null;
-    private final GameIdManager gameIdManager;
-    public GamesManagerService(MoveValidator moveValidator, LobbyFactory lobbyFactory,GameIdManager gameIdManager) {
+    private final LobbyIdManager lobbyIdManager;
+    public GamesManagerService(MoveValidator moveValidator, LobbyFactory lobbyFactory, LobbyIdManager gameIdManager) {
         this.moveValidator = moveValidator;
         this.lobbyFactory = lobbyFactory;
-        this.gameIdManager=gameIdManager;
+        this.lobbyIdManager =gameIdManager;
     }
 
     public void processMove(MovePieceRequest request) throws MovePieceException, JsonProcessingException {
@@ -71,15 +71,15 @@ public class GamesManagerService {
         }
 
         if (request.getIdPlayer().equals(idFirstPlayer)) {
-            Long idGame = gameIdManager.getId();
-            lobbyToBeCreated = lobbyFactory.createLobby(idGame, idFirstPlayer, idSecondPlayer, moveValidator, 1);
+            Long idLobby = lobbyIdManager.getId();
+            lobbyToBeCreated = lobbyFactory.createLobby(idLobby, idFirstPlayer, idSecondPlayer, moveValidator, 3);
             isGameCreated = true;
         }
 
         while (!isGameCreated) {
         }
 
-        System.out.println("Game with id: " + lobbyToBeCreated.getIdGame() + " was created");
+        System.out.println("Game with id: " + lobbyToBeCreated.getIdLobby() + " was created");
         activeLobbies.put(request.getIdPlayer(), lobbyToBeCreated);
 
         if (idFirstPlayer.equals(request.getIdPlayer())) {
@@ -93,5 +93,14 @@ public class GamesManagerService {
 
     public Lobby findLobby(Long idPlayer) {
         return activeLobbies.get(idPlayer);
+    }
+
+    public void releaseLobby(Long idPlayer){
+        Lobby lobby=this.findLobby(idPlayer);
+        Long idPlayer1= lobby.getIdPlayer1();
+        Long idPlayer2= lobby.getIdPlayer2();
+        lobbyIdManager.freeId(lobby.getIdLobby());
+        activeLobbies.remove(idPlayer1);
+        activeLobbies.remove(idPlayer2);
     }
 }

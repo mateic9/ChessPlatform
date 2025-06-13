@@ -5,6 +5,7 @@ package org.example.chess_game_logic;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.authentification.AuthService;
+import org.example.chess_game_logic.entities.*;
 import org.example.chess_game_logic.requests.ForfeitRequest;
 import org.example.chess_game_logic.requests.JoinGameRequest;
 import org.example.chess_game_logic.requests.MovePieceRequest;
@@ -36,6 +37,8 @@ public class GameController {
     @Autowired
     private WebSocketController wsCont;
 
+
+
     @Autowired
     public GameController(GamesManagerService gameManager, UserRepo userRepo,AuthService authService) {
         this.gameManager = gameManager;
@@ -61,7 +64,7 @@ public class GameController {
                 Lobby game = gameManager.processJoinRequest(request);
 
                 if (game != null) {
-                    String boardFen = game.getMoveValidator().getBoard().getFen();
+                    String boardFen = game.getMoveValidator().getBoard().getPiecePositionFen();
                     String positionOnlyFen = boardFen.split(" ")[0]; // Extract only piece positions
                     System.out.println(positionOnlyFen);
                     response.put("success", true);
@@ -91,7 +94,7 @@ public class GameController {
        try {
 
            gameManager.processMove(request);
-           String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getFen();
+           String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getPiecePositionFen();
            response.put("success",true);
            response.put("message","Move received");
            response.put("board",fenRep);
@@ -106,7 +109,7 @@ public class GameController {
            return ResponseEntity.ok(response);
        }
        catch(PromInfoNeededException e){
-           String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getFen();
+           String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getPiecePositionFen();
            response.put("success",true);
            response.put("message",e.getMessage());
            response.put("board",fenRep);
@@ -114,7 +117,7 @@ public class GameController {
            return ResponseEntity.status(202).body(response);
        }
        catch (GameOverException e){
-           String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getFen();
+           String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getPiecePositionFen();
            response.put("success",true);
            response.put("message",e.getMessage());
            response.put("board",fenRep);
@@ -122,7 +125,7 @@ public class GameController {
            sendOpponentGameOverMessage(request.getIdPlayer(), e.getMessage());
            sendCurrentPlayerGameOverMessage(request.getIdPlayer(),e.getMessage());
            System.out.println("Game Over exception: "+e.getMessage());
-
+           gameManager.releaseLobby(request.getIdPlayer());
            return ResponseEntity.ok(response);
        }
        catch (JsonProcessingException e){
@@ -137,7 +140,7 @@ public class GameController {
            sendOpponentGameOverMessage(request.getIdPlayer(), e.getMessage());
            sendCurrentPlayerGameOverMessage(request.getIdPlayer(),e.getMessage());
            System.out.println("Run out of time exception: "+e.getMessage());
-
+           gameManager.releaseLobby(request.getIdPlayer());
            return ResponseEntity.ok(response);
        }
        catch(Exception e) {
@@ -155,14 +158,14 @@ public class GameController {
         try {
 
             gameManager.findLobby(request.getIdPlayer()).processPromoteRequest(request);
-            String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getFen();
+            String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getPiecePositionFen();
             response.put("success",true);
             response.put("message","Move received");
             response.put("board",fenRep);
             return  ResponseEntity.ok(response);
         }
         catch (GameOverException e){
-            String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getFen();
+            String fenRep=gameManager.findLobby(request.getIdPlayer()).getMoveValidator().getBoard().getPiecePositionFen();
             response.put("success",true);
             response.put("message",e.getMessage());
             response.put("board",fenRep);
@@ -183,6 +186,7 @@ public class GameController {
             System.out.println("initiator forfeit: "+ request.getIdPlayer());
             GameResult result = gameManager.findLobby(request.getIdPlayer()).forfeit(request.getIdPlayer());
             sendForfeit(request.getIdPlayer(),result);
+            gameManager.releaseLobby(request.getIdPlayer());
             return ResponseEntity.ok(result.toJson());
         }
         catch(Exception e){
@@ -233,7 +237,7 @@ public class GameController {
         if(reason.equals(ErrorMessage.Draw.get()))
             gameResult=new GameResult("Draw",reason);
         else
-            gameResult=new GameResult("Win, Boss!",reason);
+            gameResult=new GameResult("Win!",reason);
 
         try {
 
@@ -268,5 +272,6 @@ public class GameController {
             System.out.println(e.getMessage());
         }
     }
+
     
 }

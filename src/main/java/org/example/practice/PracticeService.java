@@ -1,6 +1,7 @@
 package org.example.practice;
 
 import com.github.bhlangonijr.chesslib.Board;
+import com.github.bhlangonijr.chesslib.Side;
 import com.github.bhlangonijr.chesslib.move.Move;
 import com.github.bhlangonijr.chesslib.move.MoveGenerator;
 import lombok.Getter;
@@ -41,6 +42,7 @@ public class PracticeService {
 //        sendFenToClient(game);
         triggerAiMove(game);
         chessEngine.checkIsGameOver(game.getFen(),PlayerType.AI);
+//        System.out.println(chessEngine.ge);
         return game;
     }
 
@@ -53,7 +55,11 @@ public class PracticeService {
         games.put(userId, game);
 //        sendFenToClient(game);
         System.out.println(color);
-        if(color.equals("BLACK"))
+        Board board=new  Board();
+        board.loadFromFen(request.getFen());
+
+        Side side=board.getSideToMove();
+        if((color.equals("BLACK")&&side==Side.WHITE)||(color.equals("WHITE")&& side==Side.BLACK))
             triggerAiMove(game);
         return game;
     }
@@ -82,7 +88,7 @@ public class PracticeService {
     private void triggerAiMove(PracticeGame game) {
         try {
             // Only trigger if it's NOT the player's turn
-            if (game.isPlayerTurn()) return;
+
 
             // Load board from current FEN
             Board board = new Board();

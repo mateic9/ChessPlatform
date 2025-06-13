@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class GameIdManager {
+public class LobbyIdManager {
     private static final int MAXIMUM_NR_OF_GAMES = 100;
     private final Map<Long, Boolean> bookedIdMap = new ConcurrentHashMap<>();
 
